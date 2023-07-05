@@ -1,0 +1,11 @@
+Brotli
+brotlicffi
+certifi
+cffi
+charset-normalizer
+idna
+pycparser
+PySocks
+requests
+urllib3
+slumber

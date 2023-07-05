@@ -1,0 +1,4 @@
+Copyright (C) The Cross Product, Inc - All Rights Reserved.
+Proprietary and confidential.
+Written by Theodore Chabardes <theodore.chabardes@thecrossproduct.com>
+           Since May 2023.
