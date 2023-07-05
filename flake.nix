@@ -69,8 +69,7 @@
         python="python3Full";
         requirements = requirements+"\nipython"; 
         ignoreCollisions=true; 
-        packagesExtra = packagesExtra + [self.packages.${system}.module];
-        inherit providers;
+        packagesExtra = packagesExtra ++ [self.packages.${system}.module];
       };
   
     });

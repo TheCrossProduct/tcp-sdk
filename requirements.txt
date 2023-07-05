@@ -9,3 +9,4 @@ PySocks
 requests
 urllib3
 slumber
+requests-oauth
