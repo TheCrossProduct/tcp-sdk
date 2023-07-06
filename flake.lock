@@ -635,11 +635,11 @@
         "utils": "utils_2"
       },
       "locked": {
-        "lastModified": 1688565117,
-        "narHash": "sha256-kHYT5Lq7D0eYZaPGv7HsoOG7vSEoJVyf7zT2hSrt8/o=",
+        "lastModified": 1688637465,
+        "narHash": "sha256-LLxgFDpge3XhMMxUOG+ZdFgyqJB6/lr/VItC58Xcurc=",
         "ref": "main",
-        "rev": "f54b5047b1db5b67941aecf55f781c79e834536d",
-        "revCount": 181,
+        "rev": "69baf1a3b012590e1d941d84a6c73f63084c06f4",
+        "revCount": 183,
         "type": "git",
         "url": "ssh://git@github.com/TheCrossProduct/tcp-api-utils.git"
       },

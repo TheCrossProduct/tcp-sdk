@@ -5,6 +5,7 @@ class SlumberResource (slumber.Resource):
     MAX_RETRIES = 8 
 
     def retry_in (self, retry):
+
         return min (2 ** retry, 30)
 
     def _request (self, *args, **kwargs):
@@ -29,11 +30,12 @@ class SlumberResource (slumber.Resource):
                 retry_in = self.retry_in (retry)
 
                 if retry >= self.MAX_RETRIES:
+
                     debug (f"API endpoint still in maintenance after {retry} attempts", ["tcpAPI"])
                     debug ("Stop trying", ["tcpAPI"])
                     raise
 
-                debug (f"API endpoint is currently in maintenance. Try again in %s seconds... (retry {retry_in} on {self.MAX_RETRIES})", ["tcpAPI"])
+                debug (f"API endpoint is currently in maintenance. Try again in {retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})", ["tcpAPI"])
 
                 time.sleep (retry_in)
 

@@ -6,6 +6,7 @@ __version__ = '0.0.1'
 
 from .common import SlumberAPI
 from slumber.serialize import Serializer
+from slumber.exceptions import HttpServerError
 
 class tcpAPI (object):
 
@@ -29,14 +30,18 @@ class tcpAPI (object):
             from requests.auth import HTTPBasicAuth
             import json
 
-            resp = SlumberAPI (
-                    self.get_api_url (), 
-                    auth=HTTPBasicAuth(usermail,passwd),
-                    serializer=Serializer(default="json"),
-                    ).auth.login.get()
+            has_login = True
 
-            if resp.status_code == 200:
-                self.token = json.loads (resp.text)['token']
+            try:
+                resp = SlumberAPI (self.get_api_url (), 
+                               session=self.make_requests_session(),
+                               auth=HTTPBasicAuth(usermail,passwd),
+                               ).auth.login.get()
+            except HttpServerError as err:
+                has_login = False
+
+            if has_login:
+                self.token = resp['token']
 
         if not token:
             import os

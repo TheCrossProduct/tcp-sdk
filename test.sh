@@ -1,1 +1,1 @@
-$NIX_PYTHONPREFIX/bin/python -m 'tcp_api_testing'
+$NIX_PYTHONPREFIX/bin/python -m 'tcpAPI'
