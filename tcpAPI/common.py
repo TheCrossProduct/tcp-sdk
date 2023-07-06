@@ -6,7 +6,7 @@ class SlumberResource (slumber.Resource):
 
     def retry_in (self, retry):
 
-        return min (2 ** retry, 30)
+        return min (2 ** retry, 32)
 
     def _request (self, *args, **kwargs):
 

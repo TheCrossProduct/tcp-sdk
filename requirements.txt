@@ -6,6 +6,7 @@ charset-normalizer
 idna
 pycparser
 PySocks
+pytest
 requests
 urllib3
 slumber

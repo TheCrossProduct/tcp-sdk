@@ -8,7 +8,7 @@ from .common import SlumberAPI
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpServerError
 
-class tcpAPI (object):
+class API (object):
 
     base_url = None
     user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
@@ -73,3 +73,12 @@ class tcpAPI (object):
                           **kwargs)
 
         return api
+
+
+    def upload (self, local_file:str, dest_to_s3:str):
+
+        # TODO: CMA. Finished that.
+        #self.query ().data.generate_presigned_get ()
+
+#    def download (self, ):
+
