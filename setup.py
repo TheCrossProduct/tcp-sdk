@@ -6,7 +6,7 @@ setup (
     install_requires = [
         "slumber",
         "requests",
-        "requests_oauth",
+        "requests_oauthlib",
     ],
     packages = find_packages(),
     include_package_data = True,

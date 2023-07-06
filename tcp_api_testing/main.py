@@ -1,14 +1,11 @@
-def main (host="https://api.thecrossproduct.xyz", token=None, test_stelvio=True, test_app=True, test_data=True, test_usr=True):
+def main (host="https://api.thecrossproduct.xyz/v1", token=None, test_stelvio=True, test_app=True, test_data=True, test_usr=True):
 
-    import slumber
+    from .tcpAPI import tcpAPI
 
     if not token:
         import os
         token = os.environ['TCP_API_TOKEN']
 
-    from requests_oauthlib import OAuth2Session
+    api = tcpAPI (host, token) 
 
-    auth = OAuth2Session (token=token)
-    api = slumber.API (host, auth=auth)
-
-    api.auth.get()
+    api.query().auth.get()
