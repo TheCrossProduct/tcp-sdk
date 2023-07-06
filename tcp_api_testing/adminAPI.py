@@ -6,6 +6,7 @@ __version__ = '0.0.1'
 
 from .common import SlumberAPI
 from .common import SlumberResource
+from slumber.serialize import Serializer
 
 class adminResource (SlumberResource):
 
@@ -35,10 +36,12 @@ class adminAPI (object):
 
         return self.host
 
-    def query (self, serialize=True, **kwargs):
+    def query (self, **kwargs):
+
 
         api = SlumberAPI (self.get_api_url (),
                           session=self.make_requests_session(),
+                          serializer=Serializer(default="json"),
                           **kwargs)
 
         return api

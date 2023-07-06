@@ -5,6 +5,7 @@ import sys
 __version__ = '0.0.1'
 
 from .common import SlumberAPI
+from slumber.serialize import Serializer
 
 class tcpAPI (object):
 
@@ -24,10 +25,16 @@ class tcpAPI (object):
             self.token = token
 
         elif usermail and passwd:
+
             from requests.auth import HTTPBasicAuth
             import json
 
-            resp = requests.get (self.host+'/auth/login', auth=HTTPBasicAuth(usermail,passwd))
+            resp = SlumberAPI (
+                    self.get_api_url (), 
+                    auth=HTTPBasicAuth(usermail,passwd),
+                    serializer=Serializer(default="json"),
+                    ).auth.login.get()
+
             if resp.status_code == 200:
                 self.token = json.loads (resp.text)['token']
 
@@ -57,6 +64,7 @@ class tcpAPI (object):
 
         api = SlumberAPI (self.get_api_url (),
                           session=self.make_requests_session(),
+                          serializer=Serializer(default="json"),
                           **kwargs)
 
         return api
