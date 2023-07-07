@@ -1,6 +1,7 @@
 import platform
 import requests
 import sys
+import os
 
 __version__ = '0.0.1'
 
@@ -75,10 +76,33 @@ class API (object):
         return api
 
 
-    def upload (self, local_file:str, dest_to_s3:str):
+    def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str="50Mb"):
 
         # TODO: CMA. Finished that.
-        #self.query ().data.generate_presigned_get ()
+        #1: S3 target space definition
+        presigned_body={"uri": dest_to_s3,"size": file_size, "part_size":max_part_size}
+        response=self.query().data.generate-presigned-multipart-post.post(presigned_body)
+
+        #2: File's parts loading
+        uploadId=response.json()["upload_id"]
+        url=response.json()["parts"]
+        part_size = response.json()["part_size"]
+        files=[('file',(os.path.basename(local_file_path),open(local_file_path,'rb'),'application/octet-stream'))]
+        completed_parts=[]
+
+        with open(local_file_path, 'rb') as f:
+            for part_no,url in enumerate(url):
+                file_data = f.read(int(part_size))
+                #Lancement de la requête put sur une partition
+                response=self.query().data.generate-presigned-multipart-post.put(file_data)
+                #resu = requests.put(url, data=file_data)
+                #récupération des etags des partitions (nécessaire pour la commande de concaténation)
+                completed_parts.append({'ETag': response.headers['ETag'], 'PartNumber': part_no+1})
+
+        #3: Parts concatenation and end of upload
+        response= self.query().data.complete-multipart-post.post({"upload_id": uploadId, "parts": completed_parts,"uri" : dest_to_s3})
+
+
 
 #    def download (self, ):
 
