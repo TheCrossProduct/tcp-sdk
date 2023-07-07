@@ -78,7 +78,7 @@ class API (object):
     def upload (self, local_file:str, dest_to_s3:str):
 
         # TODO: CMA. Finished that.
-        #self.query ().data.generate_presigned_get ()
+        self.query ().data.generate_presigned_get ()
 
 #    def download (self, ):
 
