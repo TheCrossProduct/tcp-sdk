@@ -78,7 +78,6 @@ class API (object):
 
     def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str="50Mb"):
 
-        # TODO: CMA. Finished that.
         #1: S3 target space definition
         presigned_body={"uri": dest_to_s3,"size": file_size, "part_size":max_part_size}
         response=self.query().data.generate-presigned-multipart-post.post(presigned_body)
@@ -101,8 +100,6 @@ class API (object):
 
         #3: Parts concatenation and end of upload
         response= self.query().data.complete-multipart-post.post({"upload_id": uploadId, "parts": completed_parts,"uri" : dest_to_s3})
-
-
 
 #    def download (self, ):
 

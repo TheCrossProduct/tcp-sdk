@@ -1,5 +1,17 @@
 import slumber
 
+class BytesSerializer (slumber.serialize.BaseSerializer):
+    key = "bytes"
+    content_type = "text/plain"
+
+    def loads (self, data):
+        print ("la")
+        return data.decode ()
+
+    def dumps (self, data):
+        print ("ici")
+        return data.encode ('latin1')
+
 class SlumberResource (slumber.Resource): 
 
     MAX_RETRIES = 8 
@@ -41,5 +53,8 @@ class SlumberResource (slumber.Resource):
 
 class SlumberAPI (slumber.API):
 
+    from slumber import serialize
+
     resource_class = SlumberResource
+    serializer = serialize.Serializer (default="json", serializers=[serialize.JsonSerializer(), serialize.YamlSerializer(), BytesSerializer()])
 
