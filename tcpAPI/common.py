@@ -1,20 +1,23 @@
 import slumber
 
-class BytesSerializer (slumber.serialize.BaseSerializer):
-    key = "bytes"
-    content_type = "text/plain"
-
-    def loads (self, data):
-        print ("la")
-        return data.decode ()
-
-    def dumps (self, data):
-        print ("ici")
-        return data.encode ('latin1')
-
 class SlumberResource (slumber.Resource): 
 
     MAX_RETRIES = 8 
+
+    def help (self):
+
+        from slumber.utils import copy_kwargs, url_join
+
+        kwargs = copy_kwargs(self._store)
+
+        kwargs.update (
+                {"base_url": 
+                 url_join(
+                     url_join(self._store["host"], 'help'), self._store["base_url"][len(self._store["host"])+1:])})
+
+        print (self._get_resource(**kwargs).url())
+
+        return self._get_resource(**kwargs).get()
 
     def retry_in (self, retry):
 
@@ -56,5 +59,8 @@ class SlumberAPI (slumber.API):
     from slumber import serialize
 
     resource_class = SlumberResource
-    serializer = serialize.Serializer (default="json", serializers=[serialize.JsonSerializer(), serialize.YamlSerializer(), BytesSerializer()])
 
+    def __init__ (self, host:str, *args, **kwargs):
+        super ().__init__ (*args, **kwargs)
+        self._store.update ({'host':host})
+        print (self._store)

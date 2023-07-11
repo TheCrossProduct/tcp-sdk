@@ -68,7 +68,8 @@ class API (object):
 
     def query (self, **kwargs):
 
-        api = SlumberAPI (self.get_api_url (),
+        api = SlumberAPI (self.host,
+                          self.get_api_url (),
                           session=self.make_requests_session(),
                           serializer=Serializer(default="json"),
                           **kwargs)
