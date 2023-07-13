@@ -3,11 +3,13 @@ import requests
 import sys
 import os
 
-__version__ = '0.0.1'
-
-from .common import SlumberAPI
+from .slumberAPI import SlumberAPI
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpServerError
+
+from datetime import datetime
+
+__version__ = datetime.today().strftime ("%Y-%m-%d")
 
 class API (object):
 
@@ -75,7 +77,6 @@ class API (object):
                           **kwargs)
 
         return api
-
 
     def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str="50Mb"):
 
