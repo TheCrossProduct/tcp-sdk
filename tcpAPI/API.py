@@ -3,11 +3,13 @@ import requests
 import sys
 import os
 
-__version__ = '0.0.1'
-
-from .common import SlumberAPI
+from .slumberAPI import SlumberAPI
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpServerError
+
+from datetime import datetime
+
+__version__ = datetime.today().strftime ("%Y-%m-%d")
 
 class API (object):
 
