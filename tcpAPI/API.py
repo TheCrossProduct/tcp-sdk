@@ -76,7 +76,12 @@ class API (object):
 
         return api
 
-
+    '''Multipart upload for a file from local repository to S3 repository.
+    Works accordingly to the following sequence:
+        1- Defining the target space in the S3 repository.
+        2- Partionning the file and sending each part to the target space
+        3- Merging files and completing the upload
+    '''
     def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str="50Mb"):
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
@@ -95,9 +100,11 @@ class API (object):
                 file_data = f.read(int(part_size))
                 #Lancement de la requête put sur une partition
                 response=requests.put(url, data=file_data)
-                #resu = 
+                
                 #récupération des etags des partitions (nécessaire pour la commande de concaténation)
-                completed_parts.append({'ETag': response.headers['ETag'], 'PartNumber': part_no+1})
+                #TODO understand why response.headers['ETag'] returns a string with '"' included
+                
+                completed_parts.append({'ETag': response.headers['ETag'].replace('"',''), 'PartNumber': part_no+1})
 
         #3: Parts concatenation and end of upload
         response= self.query().data.complete_multipart_post.post({"upload_id": uploadId, "parts": completed_parts,"uri" : dest_to_s3})
