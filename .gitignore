@@ -1,0 +1,18 @@
+# nix
+
+build/
+.cproject
+.project
+.vscode/
+.idea/
+.cache/
+*.swp
+build
+build-*
+.pre-commit-config.yaml
+result
+result-*
+*.orig
+__pycache__
+*.pyc
+push.sh
