@@ -5,8 +5,7 @@
     utils.url = "github:numtide/flake-utils";
     machnix.url = "github:DavHau/mach-nix";
 
-#    tcp_api_utils.url = "git+ssh://git@github.com/TheCrossProduct/tcp-api-utils.git?ref=main";
-    tcp_api_utils.url = "path:/home/chabardt/src/stab/tcp-api-utils";
+    tcp_api_utils.url = "git+ssh://git@github.com/TheCrossProduct/tcp-api-utils.git?ref=main";
     tcp.follows =       "tcp_api_utils/tcp"; 
 #    tcp.url = "path:/home/chabardt/src/tcp";
     nixpkgs.follows =   "tcp_api_utils/nixpkgs";
