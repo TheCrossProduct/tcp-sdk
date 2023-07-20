@@ -92,7 +92,7 @@ class client (object):
 
         lines = []
         for endpoint in resp:
-            lines.append ([" OR ".join(endpoint['methods']), endpoint["endpoint"]])
+            lines.append ([" OR ".join(endpoint['methods']), endpoint["endpoint"].replace('/', '.')])
 
         max_first = max([len(x[0]) for x in lines])
 
