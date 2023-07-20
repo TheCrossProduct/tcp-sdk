@@ -78,17 +78,21 @@ class client (object):
 
         return api
 
-    '''Multipart upload for a file from local repository to S3 repository.
-    Works accordingly to the following sequence:
+    def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str=None):
+        '''Multipart upload for a file from local repository to S3 repository.
+        Works accordingly to the following sequence:
         1- Defining the target space in the S3 repository.
         2- Partionning the file and sending each part to the target space
         3- Merging files and completing the upload
-    '''
-    def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str="50Mb"):
+        '''
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
         file_size = str(os.path.getsize(local_file_path))
-        presigned_body={"uri": dest_to_s3,"size": file_size, "part_size":max_part_size}
+        presigned_body={"uri": dest_to_s3,"size": file_size}
+
+        if max_part_size:
+            presigned_body.update({"part_size":max_part_size})
+        
         response=self.query().data.generate_presigned_multipart_post.post(presigned_body)
 
         #2: File's parts loading
@@ -100,12 +104,9 @@ class client (object):
         with open(local_file_path, 'rb') as f:
             for part_no,url in enumerate(urls):
                 file_data = f.read(int(part_size))
-                #Lancement de la requête put sur une partition
+           
                 response=requests.put(url, data=file_data)
-                
-                #récupération des etags des partitions (nécessaire pour la commande de concaténation)
-                #TODO understand why response.headers['ETag'] returns a string with '"' included
-                
+                                
                 completed_parts.append({'ETag': response.headers['ETag'].replace('"',''), 'PartNumber': part_no+1})
 
         #3: Parts concatenation and end of upload
