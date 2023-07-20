@@ -1,4 +1,5 @@
 import time
+import slumber
 
 class adminResource (slumber.Resource):
 
@@ -31,25 +32,37 @@ class adminResource (slumber.Resource):
         host = self._store["host"] 
         if host[-1] == '/':
             host = host[:-1]
+        if '://' in host:
+            host = host.split("://")[1]
+        if '/' in host:
+            integral_path = '/'.join(host.split('/')[1:]) + '/' + integral_path
+            host = host.split('/')[0]
 
-        headers =  edit_tcp_signature (self.args[0],
+        data = {}
+        if "data" in kwargs:
+            data = kwargs['data']
+
+        print (args[0], integral_path, host, data, self._store["private_key"])
+
+        headers =  edit_tcp_signature (args[0],
                                        integral_path,
                                        host,
-                                       kwargs["data"],
+                                       data,
                                        self._store["private_key"])
 
-        self.store_["session"].headers.update (headers)
+        self._store["session"].headers.update (headers)
+
         return super()._request (*args, **kwargs)
 
     def _process_response (self, resp):
         if not self._store.get('serialize', True):
             return resp
-        return super (SlumberResource, self)._process_response(resp)
+        return super (adminResource, self)._process_response(resp)
 
 class adminAPI (slumber.API):
     resource_class = adminResource
 
-    def __init__ (self, host=None, private_key, base_url=None, auth=None, format=None, append_slash=True, session=None, serializer=None):
+    def __init__ (self, host=None, private_key="", base_url=None, auth=None, format=None, append_slash=True, session=None, serializer=None):
 
         super ().__init__ (base_url, auth, format, append_slash, session, serializer)
         self._store.update ({"host": host,

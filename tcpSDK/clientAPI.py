@@ -1,4 +1,5 @@
 import time
+import slumber
 
 class clientResource (slumber.Resource):
 
@@ -24,7 +25,7 @@ class clientResource (slumber.Resource):
 
         while True:
             try:
-                return super(clientResource, self)._requests(*args, **kwargs)
+                return super(clientResource, self)._request(*args, **kwargs)
             except slumber.exceptions.HttpServerError as exc:
                 if exc.response.status_code not in (502, 503, 504):
                     raise
@@ -33,8 +34,8 @@ class clientResource (slumber.Resource):
             retry_in = self.retry_in(retry)
 
             if retry >= self.MAX_RETRIES:
-                error (f'API endpoint still in maintenance after {retry} attempts.')
-                        'Stop trying.'
+                error (f'API endpoint still in maintenance after {retry} attempts.'
+                        'Stop trying.')
                 raise
 
             warning (f'API endpoint is currently in maintenance. Try again in'

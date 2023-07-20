@@ -1,4 +1,3 @@
-
 if False:
     import logging
     import contextlib
@@ -11,5 +10,5 @@ if False:
     requests_log.setLevel(logging.DEBUG)
     requests_log.propagate = True
 
-from .API import API
-from .adminAPI import adminAPI
+from .client import client
+from .admin import admin

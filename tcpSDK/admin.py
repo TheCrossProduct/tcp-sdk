@@ -7,17 +7,16 @@ from datetime import datetime
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpServerError
 
-
 __version__ = datetime.today().strftime ("%Y-%m-%d")
 
-class adminAPI (object):
+class admin (object):
 
     base_url = None
     user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
     def __init__ (self, host="https://api.thecrossproduct.xyz/v1", privkey="", user_agent=None):
 
-        from .log import error
+        from .utils import error
 
         self.host = host
 
@@ -46,9 +45,9 @@ class adminAPI (object):
 
     def query (self, **kwargs):
 
-        from .adminAPI import AdminAPI
+        from .adminAPI import adminAPI
 
-        api = AdminAPI (self.host, 
+        api = adminAPI (self.host, 
                         self.private_key, 
                         self.get_api_url (),
                         session=self.make_requests_session(),
