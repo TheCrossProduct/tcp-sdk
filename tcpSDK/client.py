@@ -3,7 +3,7 @@ import requests
 import sys
 import os
 
-from .slumberAPI import SlumberAPI
+from .clientAPI import clientAPI
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpServerError
 
@@ -11,7 +11,7 @@ from datetime import datetime
 
 __version__ = datetime.today().strftime ("%Y-%m-%d")
 
-class API (object):
+class client (object):
 
     base_url = None
     user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
@@ -70,11 +70,11 @@ class API (object):
 
     def query (self, **kwargs):
 
-        api = SlumberAPI (self.host,
-                          self.get_api_url (),
-                          session=self.make_requests_session(),
-                          serializer=Serializer(default="json"),
-                          **kwargs)
+        api = clientAPI (self.host,
+                         self.get_api_url (),
+                         session=self.make_requests_session(),
+                         serializer=Serializer(default="json"),
+                         **kwargs)
 
         return api
 

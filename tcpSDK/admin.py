@@ -46,13 +46,13 @@ class adminAPI (object):
 
     def query (self, **kwargs):
 
-        from .adminSlumberAPI import AdminSlumberAPI
+        from .adminAPI import AdminAPI
 
-        api = AdminSlumberAPI (self.host, 
-                          self.private_key, 
-                          self.get_api_url (),
-                          session=self.make_requests_session(),
-                          serializer=Serializer(default="json"),
-                          **kwargs)
+        api = AdminAPI (self.host, 
+                        self.private_key, 
+                        self.get_api_url (),
+                        session=self.make_requests_session(),
+                        serializer=Serializer(default="json"),
+                        **kwargs)
 
         return api
