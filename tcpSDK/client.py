@@ -36,9 +36,10 @@ class client (object):
             has_login = True
 
             try:
-                resp = SlumberAPI (self.get_api_url (), 
-                               session=self.make_requests_session(),
-                               auth=HTTPBasicAuth(usermail,passwd),
+                resp = clientAPI (self.get_api_url (), 
+                                  self.get_api_url (),
+                                  session=self.make_requests_session(),
+                                  auth=HTTPBasicAuth(usermail,passwd),
                                ).auth.login.get()
             except HttpServerError as err:
                 has_login = False
@@ -77,6 +78,15 @@ class client (object):
                          **kwargs)
 
         return api
+
+    def help (self):
+
+        api = clientAPI (self.host,
+                         self.get_api_url (),
+                         session=self.make_requests_session(),
+                         serializer=Serializer(default="json"),
+                         **kwargs)
+        return api.query().help.get()
 
     def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str=None):
         '''Multipart upload for a file from local repository to S3 repository.

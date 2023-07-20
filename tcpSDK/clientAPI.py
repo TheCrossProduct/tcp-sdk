@@ -6,9 +6,6 @@ class clientResource (slumber.Resource):
     MAX_RETRIES = 8
     MAX_DELAY = 32
 
-    def __dir__ (self):
-        return super.__dir__() + ['toto', 'tata']
-
     def help (self):
 
         new_uri = self._store["host"] + '/help' + self._store["base_url"].replace(self._store["host"], "")
