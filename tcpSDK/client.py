@@ -117,7 +117,7 @@ class client (object):
         for line in lines:
             print ('{0:<30}\t{1:<}'.format(line[0], line[1]))
 
-        print ("Other methods includes:\n"
+        print ("\nOther methods includes:\n"
                "\n"
                "help\t\t- this message\n"
                "download\t - from TCP S3 storage to your local storage\n"
