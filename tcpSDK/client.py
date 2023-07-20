@@ -97,12 +97,12 @@ class client (object):
 
         #2: File's parts loading
         uploadId=response["upload_id"]
-        url=response["parts"]
+        urls=response["parts"]
         part_size = response["part_size"]
         completed_parts=[]
 
         with open(local_file_path, 'rb') as f:
-            for part_no,url in enumerate(url):
+            for part_no,url in enumerate(urls):
                 file_data = f.read(int(part_size))
                 #Lancement de la requête put sur une partition
                 response=requests.put(url, data=file_data)
