@@ -81,12 +81,23 @@ class client (object):
 
     def help (self):
 
+        import textwrap
+
         api = clientAPI (self.host,
-                         self.get_api_url (),
+                         self.get_api_url () + '/help',
                          session=self.make_requests_session(),
-                         serializer=Serializer(default="json"),
-                         **kwargs)
-        return api.query().help.get()
+                         serializer=Serializer(default="json"))
+
+        resp = api._get_resource(**api._store).get()
+
+        lines = []
+        for endpoint in resp:
+            lines.append ([" OR ".join(endpoint['methods']), endpoint["endpoint"]])
+
+        max_first = max([len(x[0]) for x in lines])
+
+        for line in lines:
+            print ('{0:<30}\t{1:<}'.format(line[0], line[1]))
 
     def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str=None):
         '''Multipart upload for a file from local repository to S3 repository.
