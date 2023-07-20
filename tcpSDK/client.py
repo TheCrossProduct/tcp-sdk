@@ -81,12 +81,47 @@ class client (object):
 
     def help (self):
 
+        import textwrap
+
         api = clientAPI (self.host,
-                         self.get_api_url (),
+                         self.get_api_url () + '/help',
                          session=self.make_requests_session(),
-                         serializer=Serializer(default="json"),
-                         **kwargs)
-        return api.query().help.get()
+                         serializer=Serializer(default="json"))
+
+        resp = api._get_resource(**api._store).get()
+
+        lines = []
+        for endpoint in resp:
+            lines.append ([" OR ".join(endpoint['methods']), 'query()'+endpoint["endpoint"].replace('/', '.')])
+
+        max_first = max([len(x[0]) for x in lines])
+
+        print ("Python SDK to query TCP's API.\n"
+               "\n"
+               "If you're looking to send a GET HTTP request against our API, like:\n"
+               "\n"
+               " GET https://{hostname}/{vX}/auth\n"
+               "\n"
+               "you only need to call the following pythonic code:\n"
+               "\n"
+               "import tcpSDK\n"
+               "client = tcpSDK.client ()\n"
+               "client.query().auth.get()\n"
+               "\n"
+               "The query method returns a slumber.API object. The latter handles all the excruciating details of the requests.\n"
+               "\n"
+              )
+
+        print ("The following endpoints are available:\n")
+
+        for line in lines:
+            print ('{0:<30}\t{1:<}'.format(line[0], line[1]))
+
+        print ("\nOther methods includes:\n"
+               "\n"
+               "help\t\t- this message\n"
+               "download\t - from TCP S3 storage to your local storage\n"
+               "upload\t\t - from your local storage to TCP S3 storage\n")
 
     def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str=None):
         '''Multipart upload for a file from local repository to S3 repository.
