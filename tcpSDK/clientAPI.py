@@ -6,14 +6,23 @@ class clientResource (slumber.Resource):
     MAX_RETRIES = 8
     MAX_DELAY = 32
 
+    def __dir__ (self):
+        return super.__dir__() + ['toto', 'tata']
+
     def help (self):
 
         new_uri = self._store["host"] + '/help' + self._store["base_url"].replace(self._store["host"], "")
-        self._store.update({"base_url", new_uri} )
+        self._store.update({"base_url": new_uri} )
 
-        return self.get ()
+        resp = self.get ()
 
-    def retry_in (self, retry):
+        try:
+            print (resp.decode('utf-8'))
+        except Exception as err:
+            print (err)
+            print ("No documentation available")
+
+    def _retry_in (self, retry):
 
         return min(2 ** retry, self.MAX_DELAY)
 
@@ -31,7 +40,7 @@ class clientResource (slumber.Resource):
                     raise
 
             retry += 1
-            retry_in = self.retry_in(retry)
+            retry_in = self._retry_in(retry)
 
             if retry >= self.MAX_RETRIES:
                 error (f'API endpoint still in maintenance after {retry} attempts.'
