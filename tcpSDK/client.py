@@ -78,13 +78,17 @@ class client (object):
 
         return api
 
-    '''Multipart upload for a file from local repository to S3 repository.
-    Works accordingly to the following sequence:
-        1- Defining the target space in the S3 repository.
-        2- Partionning the file and sending each part to the target space
-        3- Merging files and completing the upload
-    '''
     def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str="50Mb"):
+        '''
+        Multipart upload for a file from local repository to S3 repository.
+
+        Works accordingly to the following sequence:
+
+            1- Defining the target space in the S3 repository.
+            2- Partionning the file and sending each part to the target space
+            3- Merging files and completing the upload
+        '''
+
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
         file_size = str(os.path.getsize(local_file_path))

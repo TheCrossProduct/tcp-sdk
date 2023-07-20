@@ -1,5 +1,5 @@
 {
-  description = "Testing all TCP APIS.";
+  description = "TCP python SDK.";
 
   inputs = {
     utils.url = "github:numtide/flake-utils";
@@ -38,7 +38,7 @@
         module = machnix.lib.${system}.buildPythonPackage  
         {
           python="python3Full";
-          pname = "tcp-api-testing";
+          pname = "tcpSDK";
           src = ./.;
           inherit version;
           inherit requirements;
