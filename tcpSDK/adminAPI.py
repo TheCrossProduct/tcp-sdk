@@ -49,8 +49,6 @@ class adminResource (slumber.Resource):
         if "data" in kwargs:
             data = kwargs['data']
 
-        print (args[0], integral_path, host, data, self._store["private_key"])
-
         headers =  edit_tcp_signature (args[0],
                                        integral_path,
                                        host,
