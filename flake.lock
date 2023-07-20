@@ -625,14 +625,18 @@
         "utils": "utils_2"
       },
       "locked": {
-        "lastModified": 1689259963,
-        "narHash": "sha256-f2GvCj3jmGsrjrNUZbnLo4kNFlfrmHOFW3PVfwA9XWI=",
-        "path": "/home/chabardt/src/stab/tcp-api-utils",
-        "type": "path"
+        "lastModified": 1689261614,
+        "narHash": "sha256-rlHQmJnXEr+QVce6/g1cMUBxei7e4IYkuhk/Ifx386g=",
+        "ref": "main",
+        "rev": "f2b0e1a672b5b671bd47c57747ae04f8a468d983",
+        "revCount": 221,
+        "type": "git",
+        "url": "ssh://git@github.com/TheCrossProduct/tcp-api-utils.git"
       },
       "original": {
-        "path": "/home/chabardt/src/stab/tcp-api-utils",
-        "type": "path"
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://git@github.com/TheCrossProduct/tcp-api-utils.git"
       }
     },
     "utils": {
