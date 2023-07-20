@@ -26,8 +26,11 @@ class adminResource (slumber.Resource):
         # removing trailing slashes
         if integral_path[0] == '/':
             integral_path = integral_path[1:]
-        if integral_path[-1] == '/':
-            integral_path = integral_path[:-1]
+
+        if  self._store['append_slash']:
+            integral_path += '/'
+#        if integral_path[-1] == '/':
+#            integral_path = integral_path[:-1]
    
         host = self._store["host"] 
         if host[-1] == '/':
@@ -37,6 +40,10 @@ class adminResource (slumber.Resource):
         if '/' in host:
             integral_path = '/'.join(host.split('/')[1:]) + '/' + integral_path
             host = host.split('/')[0]
+
+        if integral_path[0] != '/':
+            integral_path = '/' + integral_path
+
 
         data = {}
         if "data" in kwargs:
