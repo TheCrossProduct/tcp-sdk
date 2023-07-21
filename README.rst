@@ -25,7 +25,7 @@ QuickStart
 Save this token to the environment variable $TCP_API_TOKEN.
 Latter calls to ``tcp.client()`` will automatically connect to TCP API using this environment variable.
 
-3. Use tcp-sdk
+3. Start using tcp-sdk
 
 .. code-block:: python
 
