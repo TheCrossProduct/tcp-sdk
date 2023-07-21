@@ -207,7 +207,7 @@ class client (object):
 
         Args:
             src_s3 (str): path in TCP S3 bucket 
-            dest_s3 (str): desired path in your local computer 
+            dest_local (str): desired path in your local computer 
             chunk_size (int): desired chunk size for streaming download
 
         Returns:
