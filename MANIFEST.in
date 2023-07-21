@@ -1,1 +1,4 @@
 include tcp/*.py
+include README.rst
+include LICENSE.txt
+include tests

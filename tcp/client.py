@@ -159,9 +159,9 @@ class client (object):
         if max_part_size:
             presigned_body.update({"part_size":max_part_size})
         
-        resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
-
-        if not isinstance(resp,dict):
+        try:
+            resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
+        except slumber.exceptions.SlumberHttpBaseException as err:
             return False
 
         #2: File's parts loading
@@ -225,9 +225,10 @@ class client (object):
 
         body = {} 
         body['uri'] = src_s3
-        resp = self.query ().data.generate_presigned_get.post (body)
 
-        if not isinstance(resp, dict):
+        try:
+            resp = self.query ().data.generate_presigned_get.post (body)
+        except slumber.exceptions.SlumberHttpBaseException as err:
             return False
 
         url = resp['url']
