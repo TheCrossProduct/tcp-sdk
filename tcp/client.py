@@ -44,7 +44,7 @@ class client (object):
                                ).auth.login.get()
                 self.token = resp['token']
             except (HttpClientError, HttpServerError) as err:
-                warning (err)
+                warning (str(err))
                 has_login = False
 
         if not self.token:
