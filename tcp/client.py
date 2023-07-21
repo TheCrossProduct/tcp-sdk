@@ -50,7 +50,8 @@ class client (object):
         if not self.token:
             import os
             if 'TCP_API_TOKEN' not in os.environ.keys():
-                exit (1)
+                sys.exit (1)
+
             self.token = os.environ['TCP_API_TOKEN']
 
     def _make_requests_session (self):
