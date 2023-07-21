@@ -100,7 +100,8 @@ class client (object):
                "You can connect to your TCP account by either setting the environment variable TCP_API_TOKEN\n"
                "Alternatively, you can connect using the following code:\n"
                "\n"
-               "client = tcpSDK.client (usermail=\"user@mail.co\", passwd=\"passwd\")"
+               "import tcp"
+               "client = tcp.client (usermail=\"user@mail.co\", passwd=\"passwd\")"
                "\n"
                "If you're looking to send a GET HTTP request against our API, like:\n"
                "\n"
@@ -108,8 +109,8 @@ class client (object):
                "\n"
                "you only need to call the following pythonic code:\n"
                "\n"
-               "import tcpSDK\n"
-               "client = tcpSDK.client ()\n"
+               "import tcp\n"
+               "client = tcp.client ()\n"
                "client.query().auth.get()\n"
                "\n"
                "The query method returns a slumber.API object.\n"
@@ -125,8 +126,8 @@ class client (object):
         print ("\n\nOther methods includes:\n"
                "\n"
                "help\t\t- this message\n"
-               "download\t - from TCP S3 storage to your local storage\n"
-               "upload\t\t - from your local storage to TCP S3 storage\n")
+               "download\t- from TCP S3 storage to your local storage\n"
+               "upload\t\t- from your local storage to TCP S3 storage\n")
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None):
         '''
