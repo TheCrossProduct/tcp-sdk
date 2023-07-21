@@ -1,1 +1,1 @@
-include tcpSDK/*.py
+include tcp/*.py

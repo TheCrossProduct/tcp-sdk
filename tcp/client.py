@@ -9,7 +9,7 @@ from slumber.exceptions import HttpServerError
 
 from datetime import datetime
 
-__version__ = datetime.today().strftime ("%Y-%m-%d")
+from . import __version__
 
 class client (object):
 

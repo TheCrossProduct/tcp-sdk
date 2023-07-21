@@ -27,7 +27,7 @@
         module = machnix.lib.${system}.buildPythonPackage  
         {
           python="python3Full";
-          pname = "tcpSDK";
+          pname = "tcp-sdk";
           src = ./.;
           inherit version;
           inherit requirements;

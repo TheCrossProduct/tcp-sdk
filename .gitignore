@@ -15,4 +15,3 @@ result-*
 *.orig
 __pycache__
 *.pyc
-push.sh
