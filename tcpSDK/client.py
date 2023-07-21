@@ -36,9 +36,9 @@ class client (object):
             has_login = True
 
             try:
-                resp = clientAPI (self.get_api_url (), 
-                                  self.get_api_url (),
-                                  session=self.make_requests_session(),
+                resp = clientAPI (self.host, 
+                                  self.host,
+                                  session=self._make_requests_session(),
                                   auth=HTTPBasicAuth(usermail,passwd),
                                ).auth.login.get()
             except HttpServerError as err:
@@ -53,7 +53,7 @@ class client (object):
                 exit (1)
             self.token = os.environ['TCP_API_TOKEN']
 
-    def make_requests_session (self):
+    def _make_requests_session (self):
 
         session = requests.Session ()
 
@@ -65,30 +65,29 @@ class client (object):
 
         return session
 
-    def get_api_url (self):
-
-        return self.host
-
     def query (self, **kwargs):
 
         api = clientAPI (self.host,
-                         self.get_api_url (),
-                         session=self.make_requests_session(),
+                         self.host,
+                         session=self._make_requests_session(),
                          serializer=Serializer(default="json"),
                          **kwargs)
 
         return api
 
+    def _get_endpoints (self):
+        api = clientAPI (self.host,
+                         self.host + '/help',
+                         session=self._make_requests_session(),
+                         serializer=Serializer(default="json"))
+
+        return api._get_resource(**api._store).get()
+
     def help (self):
 
         import textwrap
 
-        api = clientAPI (self.host,
-                         self.get_api_url () + '/help',
-                         session=self.make_requests_session(),
-                         serializer=Serializer(default="json"))
-
-        resp = api._get_resource(**api._store).get()
+        resp = self._get_endpoints ()
 
         lines = []
         for endpoint in resp:
@@ -97,6 +96,11 @@ class client (object):
         max_first = max([len(x[0]) for x in lines])
 
         print ("Python SDK to query TCP's API.\n"
+               "\n"
+               "You can connect to your TCP account by either setting the environment variable TCP_API_TOKEN\n"
+               "Alternatively, you can connect using the following code:\n"
+               "\n"
+               "client = tcpSDK.client (usermail=\"user@mail.co\", passwd=\"passwd\")"
                "\n"
                "If you're looking to send a GET HTTP request against our API, like:\n"
                "\n"
@@ -108,7 +112,8 @@ class client (object):
                "client = tcpSDK.client ()\n"
                "client.query().auth.get()\n"
                "\n"
-               "The query method returns a slumber.API object. The latter handles all the excruciating details of the requests.\n"
+               "The query method returns a slumber.API object.\n"
+               "The latter handles all the excruciating details of the requests.\n"
                "\n"
               )
 
@@ -117,45 +122,124 @@ class client (object):
         for line in lines:
             print ('{0:<30}\t{1:<}'.format(line[0], line[1]))
 
-        print ("\nOther methods includes:\n"
+        print ("\n\nOther methods includes:\n"
                "\n"
                "help\t\t- this message\n"
                "download\t - from TCP S3 storage to your local storage\n"
                "upload\t\t - from your local storage to TCP S3 storage\n")
 
-    def upload (self, local_file_path:str, dest_to_s3:str, max_part_size:str=None):
-        '''Multipart upload for a file from local repository to S3 repository.
-        Works accordingly to the following sequence:
-        1- Defining the target space in the S3 repository.
-        2- Partionning the file and sending each part to the target space
-        3- Merging files and completing the upload
+    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None):
+        '''
+        Multipart upload of a file from local repository to S3 repository.
+
+        Args:
+            src_local (str): path to your file on your local computer
+            dest_s3 (str): desired path in TCP S3 bucket
+            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "10Gb") 
+
+        Returns:
+            bool: True if it has successed
+
+        Notes:
+
+            Works accordingly to the following sequence:
+                1. Defining the target space in the S3 repository.
+                2. Partionning the file and sending each part to the target space
+                3. Merging files and completing the upload
+
+            Internally it uses the following TCP endpoints:
+                - POST generate_presigned_multipart_post 
+                - POST complete_multipart_post
         '''
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
-        file_size = str(os.path.getsize(local_file_path))
-        presigned_body={"uri": dest_to_s3,"size": file_size}
+        file_size = str(os.path.getsize(src_local))
+        presigned_body={"uri": dest_s3,"size": file_size}
 
         if max_part_size:
             presigned_body.update({"part_size":max_part_size})
         
-        response=self.query().data.generate_presigned_multipart_post.post(presigned_body)
+        resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
+
+        if not isinstance(resp,dict):
+            return False
 
         #2: File's parts loading
-        uploadId=response["upload_id"]
-        urls=response["parts"]
-        part_size = response["part_size"]
+        uploadId=resp["upload_id"]
+        urls=resp["parts"]
+        part_size = resp["part_size"]
         completed_parts=[]
 
-        with open(local_file_path, 'rb') as f:
+        has_failed = False
+
+        with open(src_local, 'rb') as f:
             for part_no,url in enumerate(urls):
                 file_data = f.read(int(part_size))
            
-                response=requests.put(url, data=file_data)
+                resp=requests.put(url, data=file_data)
+
+                if resp.status_code != 200:
+                    has_failed = True
+                    break
                                 
                 completed_parts.append({'ETag': response.headers['ETag'].replace('"',''), 'PartNumber': part_no+1})
 
-        #3: Parts concatenation and end of upload
-        response= self.query().data.complete_multipart_post.post({"upload_id": uploadId, "parts": completed_parts,"uri" : dest_to_s3})
+        body = {}
 
-#    def download (self, ):
+        # A part has failed, we abort.
+        if has_failed:
+            body['upload_id'] = uploadId
+            body['uri'] = dest_s3
+            self.query().data.abort_multipart_post.delete (body)
+            return False
+
+        #3: Parts concatenation and end of upload
+        body["upload_id"] = uploadId
+        body["parts"] = completed_parts
+        body["uri"] = dest_s3
+        self.query().data.complete_multipart_post.post(body)
+
+        return True
+
+    def download (self, src_s3, dest_local, chunk_size=8192):
+        '''
+        Download of a file from local repository to S3 repository.
+
+        Args:
+            src_s3 (str): path in TCP S3 bucket 
+            dest_s3 (str): desired path in your local computer 
+            chunk_size (int): desired chunk size for streaming download
+
+        Returns:
+            bool: True if it has successed
+
+        Notes:
+
+            Works accordingly to the following sequence:
+                1. Get a temporary link to our S3 
+                2. Download file from that link using a stream 
+
+            Internally it uses the following TCP endpoints:
+                - POST generate_presigned_get
+        '''
+
+        body = {} 
+        body['uri'] = src_s3
+        resp = self.query ().data.generate_presigned_get.post (body)
+
+        if not isinstance(resp, dict):
+            return False
+
+        url = resp['url']
+
+        try: 
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status ()
+                with open (dest_local, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=chunk_size)
+                        f.write (chunk)
+        except requests.exceptions.HTTPError as err:
+            return False
+
+        return True
 
