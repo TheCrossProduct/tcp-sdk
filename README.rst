@@ -6,7 +6,7 @@ tcp-sdk is a Python module that provides a convenient object-oriented interface 
 QuickStart
 ----------
 
-1. install tcp-sdk
+ * install tcp-sdk
 
 .. code-block:: bash
 
@@ -14,24 +14,24 @@ QuickStart
   $ source my_virtualenv/bin/activate
   $ pip install tcp-sdk
 
-2. Connect to your TCP account
+ * Connect to your TCP account
 
 .. code-block:: python
 
-  >> import tcp
-  >> client = tcp.client (usermail="user@domain.org", passwd="passwd")
-  >> print(client.token)
+  import tcp
+  client = tcp.client (usermail="user@domain.org", passwd="passwd")
+  print(client.token)
   
 Save this token to the environment variable $TCP_API_TOKEN.
 Latter calls to ``tcp.client()`` will automatically connect to TCP API using this environment variable.
 
-3. Start using tcp-sdk
+ * Start using tcp-sdk
 
 .. code-block:: python
 
-  >> import tcp
-  >> client = tcp.client ()
-  >> print (client.query().auth.get())
+  import tcp
+  client = tcp.client ()
+  print (client.query().auth.get())
 
 Requirements
 ------------
@@ -42,5 +42,3 @@ tcp-sdk requires the following modules.
  * slumber
  * requests-oauthlib
 
-.. |build-status| TODO
-.. |coverage-status| TODO
