@@ -236,7 +236,7 @@ class client (object):
             with requests.get(url, stream=True) as r:
                 r.raise_for_status ()
                 with open (dest_local, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=chunk_size)
+                    for chunk in r.iter_content(chunk_size=chunk_size):
                         f.write (chunk)
         except requests.exceptions.HTTPError as err:
             return False
