@@ -6,7 +6,7 @@ tcp-sdk is a Python module that provides a convenient object-oriented interface 
 QuickStart
 ----------
 
-* install tcp-sdk
+* Install tcp-sdk
 
 .. code-block:: bash
 
