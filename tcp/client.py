@@ -5,7 +5,7 @@ import os
 
 from .clientAPI import clientAPI
 from slumber.serialize import Serializer
-from slumber.exceptions import HttpServerError
+from slumber.exceptions import HttpClientError, HttpServerError
 
 from datetime import datetime
 
@@ -32,6 +32,7 @@ class client (object):
 
             from requests.auth import HTTPBasicAuth
             import json
+            from .utils import warning
 
             has_login = True
 
@@ -41,13 +42,12 @@ class client (object):
                                   session=self._make_requests_session(),
                                   auth=HTTPBasicAuth(usermail,passwd),
                                ).auth.login.get()
-            except HttpServerError as err:
+                self.token = resp['token']
+            except (HttpClientError, HttpServerError) as err:
+                warning (err)
                 has_login = False
 
-            if has_login:
-                self.token = resp['token']
-
-        if not token:
+        if not self.token:
             import os
             if 'TCP_API_TOKEN' not in os.environ.keys():
                 exit (1)
