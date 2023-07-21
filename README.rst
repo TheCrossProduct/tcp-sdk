@@ -1,4 +1,4 @@
-The Cross Product python SDK |build-status| |coverage-status|
+TCP python SDK |build-status| |coverage-status|
 =============================================================
 
 tcp-sdk is a Python module that provides a convenient object-oriented interface to TCP API. it acts as a wrapper around `slumber <https://github.com/samgiles/slumber>`.
@@ -14,5 +14,33 @@ QuickStart
   $ source my_virtualenv/bin/activate
   $ pip install tcp-sdk
 
+2. Connect to your TCP account
 
+.. code-block:: python
 
+  >> import tcp
+  >> client = tcp.client (usermail="user@domain.org", passwd="passwd")
+  >> print(client.token)
+  
+Save this token to the environment variable $TCP_API_TOKEN.
+Latter calls to ``tcp.client()`` will automatically connect to TCP API using this environment variable.
+
+3. Use tcp-sdk
+
+.. code-block:: python
+
+  >> import tcp
+  >> client = tcp.client ()
+  >> print (client.query().auth.get())
+
+Requirements
+------------
+
+tcp-sdk requires the following modules.
+
+ * requests
+ * slumber
+ * requests-oauthlib
+
+.. |build-status| TODO
+.. |coverage-status| TODO
