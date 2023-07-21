@@ -40,15 +40,11 @@ def version ():
     _version = matches.group(1)
     return _version
 
-def long_description ():
-    return read_file ("README.rst")
-
 setup (
     name = package_name,
 
     version = version(),
     description = "Python SDK to query The Cross Product API.",
-    long_description = long_description(),
 
     install_requires = deps,
     tests_require = deps + extra_deps["tests"],
