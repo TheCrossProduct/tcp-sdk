@@ -184,7 +184,7 @@ class client (object):
                     has_failed = True
                     break
                                 
-                completed_parts.append({'ETag': response.headers['ETag'].replace('"',''), 'PartNumber': part_no+1})
+                completed_parts.append({'ETag': resp.headers['ETag'].replace('"',''), 'PartNumber': part_no+1})
 
         body = {}
 
