@@ -43,7 +43,7 @@ def version ():
 setup (
     name = package_name,
 
-    version = version(),
+    version = "1.0.1",
     description = "Python SDK to query The Cross Product API.",
 #    long_description_content_type = "text/x-rst",
 #    long_description = read_file('README.rst'),
