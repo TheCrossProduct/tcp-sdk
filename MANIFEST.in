@@ -2,4 +2,3 @@ include tcp/*.py
 include notebook/*.ipynb
 include README.rst
 include LICENSE.txt
-include tests

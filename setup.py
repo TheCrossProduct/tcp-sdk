@@ -52,7 +52,6 @@ setup (
 
     install_requires = deps,
     tests_require = deps + extra_deps["tests"],
-    extra_require = extra_deps,
 
     dependency_links = [],
 
