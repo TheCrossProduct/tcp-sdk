@@ -1,0 +1,12 @@
+[project]
+name = "tcp-sdk"
+version = "1.0.1
+description = "Python SDK to query The Cross Product API."
+
+[build-system]
+requires = ["slumber", "requests", "requests_oauthlib"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
