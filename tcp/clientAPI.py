@@ -25,7 +25,7 @@ class clientResource (slumber.Resource):
 
     def _request (self, *args, **kwargs):
 
-        from .utils import error
+        from .utils import error, warning
 
         retry = 0
 
