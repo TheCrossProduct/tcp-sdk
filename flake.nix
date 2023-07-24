@@ -56,6 +56,7 @@
         requirements = requirements+"\nipython"; 
         ignoreCollisions=true; 
         packagesExtra = [self.packages.${system}.module];
+        providers={notebook="nixpkgs";};
       };
   
     });
