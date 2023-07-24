@@ -11,7 +11,6 @@ from . import __version__
 
 class client (object):
 
-    base_url = None
     user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
     def __init__ (self, host="https://api.thecrossproduct.xyz/v1", token=None, user_agent=None, usermail=None, passwd=None):
