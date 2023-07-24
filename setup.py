@@ -40,6 +40,8 @@ def version ():
     _version = matches.group(1)
     return _version
 
+print (_version)
+
 setup (
     name = package_name,
 

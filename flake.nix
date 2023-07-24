@@ -32,6 +32,7 @@
           inherit version;
           inherit requirements;
           doCheck = false;
+          ignoreCollisions=true; 
         };
 
         pyInterpreter = machnix.lib.${system}.mkPython
