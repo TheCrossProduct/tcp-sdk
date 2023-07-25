@@ -30,20 +30,21 @@ def read_file (*relative_path_elements):
 
 _version = None
 def version ():
+
     global _version
     if _version:
         return _version
-    init_file = read_file(module_name, '__init__.py')
-    matches = re.search (r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', init_file, re.M)
+    version_file = read_file(module_name, '_version.py')
+    matches = re.search (r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', version_file, re.M)
     if not matches:
-        raise RuntimeError ("Unable to find version string in __init__.py .")
+        raise RuntimeError ("Unable to find version string in _version.py .")
     _version = matches.group(1)
     return _version
 
 setup (
     name = package_name,
 
-    version = "1.0.1",
+    version = version(),
     description = "Python SDK to query The Cross Product API.",
 #    long_description_content_type = "text/x-rst",
 #    long_description = read_file('README.rst'),
