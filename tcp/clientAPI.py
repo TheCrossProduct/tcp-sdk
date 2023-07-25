@@ -1,5 +1,6 @@
 import time
 import slumber
+from .logs import warning
 
 class clientResource (slumber.Resource):
 
@@ -11,13 +12,19 @@ class clientResource (slumber.Resource):
         new_uri = self._store["host"] + '/help' + self._store["base_url"].replace(self._store["host"], "")
         self._store.update({"base_url": new_uri} )
 
-        resp = self.get ()
+        try:
+            resp = self.get ()
+        except slumber.exceptions.HttpServerError as err:
+            raise exceptions.HttpServerException(str(err), err.__dict__)
+        except slumber.exceptions.HttpClientError as err:
+            if err.response.status_code == "404":
+                raise exceptions.NoDocumentation(str(err), err.__dict__)
+            raise exceptions.HttpClientException(str(err), err.__dict__)
 
         try:
             print (resp.decode('utf-8'))
-        except Exception as err:
-            print (err)
-            print ("No documentation available")
+        except UnicodeDecodeError as err:
+            exceptions.NoDocumentation (f"Unable to decode: {str(err)}")
 
     def _retry_in (self, retry):
 
@@ -25,24 +32,23 @@ class clientResource (slumber.Resource):
 
     def _request (self, *args, **kwargs):
 
-        from .logs import error, warning
-
         retry = 0
 
         while True:
             try:
                 return super(clientResource, self)._request(*args, **kwargs)
-            except slumber.exceptions.HttpServerError as exc:
+            except slumber.exceptions.HttpClientError as err:
+                raise exceptions.HttpClientException (str(err), err.__dict__)
+            except slumber.exceptions.HttpServerError as err:
                 if exc.response.status_code not in (502, 503, 504):
-                    raise
+                    raise exceptions.HttpServerException (str(err), err.__dict__)
 
             retry += 1
             retry_in = self._retry_in(retry)
 
             if retry >= self.MAX_RETRIES:
-                error (f'API endpoint still in maintenance after {retry} attempts.'
-                        'Stop trying.')
-                raise
+                raise exceptions.HttpServerException(f'API endpoint still in maintenance after {retry} attempts.'
+                                                      'Stop trying.')
 
             warning (f'API endpoint is currently in maintenance. Try again in'
                       '{retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})'

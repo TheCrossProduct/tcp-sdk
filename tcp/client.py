@@ -3,10 +3,11 @@ import requests
 import sys
 import os
 
-from .clientAPI import clientAPI
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpClientError, HttpServerError
 
+from .clientAPI import clientAPI
+from . import exceptions 
 from ._version import __version__
 
 class client (object):
@@ -40,14 +41,19 @@ class client (object):
                                   auth=HTTPBasicAuth(usermail,passwd),
                                ).auth.login.get()
                 self.token = resp['token']
-            except (HttpClientError, HttpServerError) as err:
-                warning (str(err))
+            except slumber.exceptions.SlumberHttpClientError as err:
                 has_login = False
+                if err.response.status_code == 401:
+                    raise exceptions.InvalidCredentials(str(err), err.__dict__)
+                raise exceptions.tcpHttpClientException (str(err), err.__dict__)
+            except slumber.exceptions.SlumberHttpServerError as err:
+                raise exceptions.HttpServerException(str(err), err.__dict__)
+                
 
         if not self.token:
             import os
             if 'TCP_API_TOKEN' not in os.environ.keys():
-                sys.exit (1)
+                raise exceptions.InvalidCredentials ("No token available: either use BasicAuth or set the env var $TCP_API_TOKEN") 
 
             self.token = os.environ['TCP_API_TOKEN']
 
@@ -74,6 +80,7 @@ class client (object):
         return api
 
     def _get_endpoints (self):
+
         api = clientAPI (self.host,
                          self.host + '/help',
                          session=self._make_requests_session(),
@@ -136,8 +143,8 @@ class client (object):
             dest_s3 (str): desired path in TCP S3 bucket
             max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "10Gb") 
 
-        Returns:
-            bool: True if it has successed
+        Exceptions:
+            tcp.exceptions.tcpUploadException
 
         Notes:
 
@@ -161,7 +168,7 @@ class client (object):
         try:
             resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            return False
+            raise exceptions.UploadException (str(err), err.__dict__)
 
         #2: File's parts loading
         uploadId=resp["upload_id"]
@@ -190,15 +197,21 @@ class client (object):
             body['upload_id'] = uploadId
             body['uri'] = dest_s3
             self.query().data.abort_multipart_post.delete (body)
-            return False
+
+            number_of_parts_done = len(completed_parts)
+            total_number_of_parts = len(urls)
+
+            raise exceptions.UploadException (f"Part number {number_of_parts_done} failed ({total_number_of_parts} in totals). The multi-part upload was aborted")
 
         #3: Parts concatenation and end of upload
         body["upload_id"] = uploadId
         body["parts"] = completed_parts
         body["uri"] = dest_s3
-        self.query().data.complete_multipart_post.post(body)
 
-        return True
+        try:
+            self.query().data.complete_multipart_post.post(body)
+        except slumber.exceptions.SlumberHttpBaseException as err:
+            raise exceptions.UploadException (str(err), err.__dict__)
 
     def download (self, src_s3, dest_local, chunk_size=8192):
         '''
@@ -209,8 +222,8 @@ class client (object):
             dest_local (str): desired path in your local computer 
             chunk_size (int): desired chunk size for streaming download
 
-        Returns:
-            bool: True if it has successed
+        Exceptions:
+            tcp.exceptions.tcpDownloadException
 
         Notes:
 
@@ -228,7 +241,7 @@ class client (object):
         try:
             resp = self.query ().data.generate_presigned_get.post (body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            return False
+            raise exceptions.DownloadException (str(err), err.__dict__)
 
         url = resp['url']
 
@@ -239,7 +252,5 @@ class client (object):
                     for chunk in r.iter_content(chunk_size=chunk_size):
                         f.write (chunk)
         except requests.exceptions.HTTPError as err:
-            return False
-
-        return True
+            raise exceptions.DownloadException (str(err), err.__dict__)
 
