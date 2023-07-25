@@ -1,6 +1,7 @@
 import time
 import slumber
 from .logs import warning
+from . import exceptions
 
 class clientResource (slumber.Resource):
 
@@ -14,17 +15,15 @@ class clientResource (slumber.Resource):
 
         try:
             resp = self.get ()
-        except slumber.exceptions.HttpServerError as err:
-            raise exceptions.HttpServerException(str(err), err.__dict__)
-        except slumber.exceptions.HttpClientError as err:
+        except exceptions.HttpClientError as err:
             if err.response.status_code == "404":
-                raise exceptions.NoDocumentation(str(err), err.__dict__)
-            raise exceptions.HttpClientException(str(err), err.__dict__)
+                raise exceptions.NoDocumentation(str(err), **err.__dict__) from err
+            raise err 
 
         try:
             print (resp.decode('utf-8'))
         except UnicodeDecodeError as err:
-            exceptions.NoDocumentation (f"Unable to decode: {str(err)}")
+            raise exceptions.NoDocumentation (f"Unable to decode") from err
 
     def _retry_in (self, retry):
 
@@ -38,16 +37,18 @@ class clientResource (slumber.Resource):
             try:
                 return super(clientResource, self)._request(*args, **kwargs)
             except slumber.exceptions.HttpClientError as err:
-                raise exceptions.HttpClientException (str(err), err.__dict__)
+                if err.response.status_code == 401:
+                    raise exceptions.InvalidCredentials (str(err), **err.__dict__) from err
+                raise exceptions.HttpClientError (str(err), **err.__dict__) from err
             except slumber.exceptions.HttpServerError as err:
                 if exc.response.status_code not in (502, 503, 504):
-                    raise exceptions.HttpServerException (str(err), err.__dict__)
+                    raise exceptions.HttpServerError (str(err), **err.__dict__) from err
 
             retry += 1
             retry_in = self._retry_in(retry)
 
             if retry >= self.MAX_RETRIES:
-                raise exceptions.HttpServerException(f'API endpoint still in maintenance after {retry} attempts.'
+                raise exceptions.HttpServerError(f'API endpoint still in maintenance after {retry} attempts.'
                                                       'Stop trying.')
 
             warning (f'API endpoint is currently in maintenance. Try again in'

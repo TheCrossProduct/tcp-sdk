@@ -9,16 +9,16 @@ class tcpHttpBaseException (tcpBaseException):
     """
 
     def __init__ (self, *args, **kwargs):
-        for key, val in kwargs.iteritems():
-            setattr(self, key, value)
+        for key, val in kwargs.items():
+            setattr(self, key, val)
         super(tcpHttpBaseException, self).__init__(*args)
 
-class HttpClientException (tcpHttpBaseException):
+class HttpClientError (tcpHttpBaseException):
     """
     Called when the server tells us there was a client error (4xx)
     """
 
-class HttpServerException (tcpHttpBaseException):
+class HttpServerError (tcpHttpBaseException):
     """
     Called when the server tells us there was a server error (5xx)
     """
@@ -33,12 +33,12 @@ class NoDocumentation (tcpHttpBaseException):
     No documentation is available for this endpoint.
     """
 
-class DownloadException (tcpHttpBaseException):
+class DownloadError (tcpHttpBaseException):
     """
     Download has failed somehow.
     """
 
-class UploadException (tcpHttpBaseException):
+class UploadError (tcpHttpBaseException):
     """
     Upload has failed somehow.
     """

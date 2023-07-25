@@ -1,7 +1,6 @@
 import platform
 import requests
 import sys
-import os
 
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpClientError, HttpServerError
@@ -14,7 +13,15 @@ class client (object):
 
     user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
-    def __init__ (self, host="https://api.thecrossproduct.xyz/v1", token=None, user_agent=None, usermail=None, passwd=None):
+    def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None):
+
+        import os
+
+        if host == None:
+            if 'TCP_HOST' in os.environ.keys ():
+                host = os.environ['TCP_HOST']
+            else:
+                host = "https://api.thecrossproduct.xyz/v1"
 
         self.host = host
 
@@ -32,26 +39,15 @@ class client (object):
             import json
             from .logs import warning
 
-            has_login = True
+            resp = clientAPI (self.host, 
+                              self.host,
+                              session=self._make_requests_session(),
+                              auth=HTTPBasicAuth(usermail,passwd),
+                           ).auth.login.get()
 
-            try:
-                resp = clientAPI (self.host, 
-                                  self.host,
-                                  session=self._make_requests_session(),
-                                  auth=HTTPBasicAuth(usermail,passwd),
-                               ).auth.login.get()
-                self.token = resp['token']
-            except slumber.exceptions.SlumberHttpClientError as err:
-                has_login = False
-                if err.response.status_code == 401:
-                    raise exceptions.InvalidCredentials(str(err), err.__dict__)
-                raise exceptions.tcpHttpClientException (str(err), err.__dict__)
-            except slumber.exceptions.SlumberHttpServerError as err:
-                raise exceptions.HttpServerException(str(err), err.__dict__)
-                
+            self.token = resp['token']
 
         if not self.token:
-            import os
             if 'TCP_API_TOKEN' not in os.environ.keys():
                 raise exceptions.InvalidCredentials ("No token available: either use BasicAuth or set the env var $TCP_API_TOKEN") 
 
@@ -157,6 +153,8 @@ class client (object):
                 - POST generate_presigned_multipart_post 
                 - POST complete_multipart_post
         '''
+        import os
+
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
         file_size = str(os.path.getsize(src_local))
