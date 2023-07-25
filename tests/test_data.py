@@ -48,7 +48,7 @@ class DataTestCase (unittest.TestCase):
         os.remove (file_src)
         os.remove (file_dest)
 
-        self._client.query().data.delete ({'uri':"test.txt"})
+        self._client.query().data.delete_file.post ({'uri':"test.txt"})
 
         resp = self._client.query().data.get()
         assert 'test.txt' not in resp['files']

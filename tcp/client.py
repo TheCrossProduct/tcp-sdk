@@ -194,7 +194,7 @@ class client (object):
         if has_failed:
             body['upload_id'] = uploadId
             body['uri'] = dest_s3
-            self.query().data.abort_multipart_post.delete (body)
+            self.query().data.abort_multipart_post.post (body)
 
             number_of_parts_done = len(completed_parts)
             total_number_of_parts = len(urls)
