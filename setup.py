@@ -12,18 +12,6 @@ deps = [
     'requests_oauthlib'
     ]
 
-extra_deps = {
-    'tests': [
-        'coverage'
-        'mock',
-        'pylint'
-        ],
-    'develop': [
-        'setuptools',
-        'wheel'
-        ]
-    }
-
 def read_file (*relative_path_elements):
     file_path = path.join (path.dirname(__file__), *relative_path_elements)
     return io.open(file_path, encoding='utf8').read().strip()
@@ -46,14 +34,14 @@ setup (
 
     version = version(),
     description = "Python SDK to query The Cross Product API.",
-#    long_description_content_type = "text/x-rst",
-#    long_description = read_file('README.rst'),
-    long_description_content_type="text/x-rst",
-    long_description=io.open(path.join(path.dirname(__file__), "README.rst"), "r").read(),
+    long_description_content_type = "text/x-rst",
+    long_description = read_file('README.rst'),
 
     install_requires = deps,
 
     dependency_links = [],
 
     packages = find_packages(),
+
+    test_suite = "tests.get_tests",
 )
