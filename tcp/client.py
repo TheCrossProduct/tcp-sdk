@@ -29,7 +29,7 @@ class client (object):
 
             from requests.auth import HTTPBasicAuth
             import json
-            from .utils import warning
+            from .logs import warning
 
             has_login = True
 
