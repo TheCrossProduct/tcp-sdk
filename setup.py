@@ -52,7 +52,6 @@ setup (
     long_description=io.open(path.join(path.dirname(__file__), "README.rst"), "r").read(),
 
     install_requires = deps,
-    tests_require = deps + extra_deps["tests"],
 
     dependency_links = [],
 
