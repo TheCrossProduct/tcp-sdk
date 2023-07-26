@@ -36,6 +36,7 @@ setup (
     description = "Python SDK to query The Cross Product API.",
     long_description_content_type = "text/x-rst",
     long_description = read_file('README.rst'),
+    license_files = ("License"),
 
     install_requires = deps,
 
