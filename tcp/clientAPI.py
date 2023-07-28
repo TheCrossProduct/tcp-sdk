@@ -41,7 +41,7 @@ class clientResource (slumber.Resource):
                     raise exceptions.InvalidCredentials (str(err), **err.__dict__) from err
                 raise exceptions.HttpClientError (str(err), **err.__dict__) from err
             except slumber.exceptions.HttpServerError as err:
-                if exc.response.status_code not in (502, 503, 504):
+                if err.response.status_code not in (502, 503, 504):
                     raise exceptions.HttpServerError (str(err), **err.__dict__) from err
 
             retry += 1
@@ -51,8 +51,8 @@ class clientResource (slumber.Resource):
                 raise exceptions.HttpServerError(f'API endpoint still in maintenance after {retry} attempts.'
                                                       'Stop trying.')
 
-            warning (f'API endpoint is currently in maintenance. Try again in'
-                      '{retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})'
+            warning ( 'API endpoint is currently in maintenance. Try again in '
+                     f'{retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})'
                      )
             time.sleep (retry_in)
 

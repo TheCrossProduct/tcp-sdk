@@ -121,6 +121,91 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['ram_required'], int)
             assert el['ram_required'] >= 0
 
+    def test_list_Remote_get (self):
+
+        resp = self._client.query().app.list.Remote.get() 
+
+        assert isinstance (resp, list)
+
+        for el in resp:
+
+            for key in el:
+                assert key in ['id', 
+                               'name', 
+                               'user_id', 
+                               'ip',
+                               'usr',
+                               'num_cores',
+                               'mem',
+                               'ram',
+                               'input_path',
+                               'working_path',
+                               'output_path',
+                               'instanciated']
+
+            assert isinstance (el, dict) 
+            assert isinstance (el['id'], str)
+            assert re.fullmatch (self._re_uuid4, el['id'])
+            assert isinstance (el['user_id'], str)
+            assert re.fullmatch (self._re_uuid4, el['user_id'])
+            assert isinstance (el['ip'], str) 
+            assert re.fullmatch (self._re_ip, el['ip'])
+            assert isinstance (el['usr'], str)
+            assert re.fullmatch (self._re_usr, el['usr'])
+            assert isinstance (el['num_cores'], int)
+            assert el['num_cores'] > 0
+            assert isinstance (el['mem'], int)
+            assert el['mem'] >= 0
+            assert isinstance (el['ram'], int)
+            assert el['ram'] >= 0
+            assert isinstance (el['input_path'], str)
+            assert re.fullmatch (self._re_path, el['input_path'])
+            assert isinstance (el['working_path'], str)
+            assert re.fullmatch (self._re_path, el['working_path'])
+            assert isinstance (el['output_path'], str)
+            assert re.fullmatch (self._re_path, el['output_path'])
+            assert isinstance (el['instanciated'], bool)
+
+    def test_list_PostMortem_get (self):
+
+        resp = self._client.query().app.list.PostMortem.get() 
+
+        assert isinstance (resp, list)
+
+        for el in resp:
+
+            for key in el:
+                assert key in ['id', 
+                               'ext_id', 
+                               'user_id', 
+                               'process_id',
+                               'launched',
+                               'terminated',
+                               'state',
+                               'num_cores',
+                               'mem',
+                               'ram']
+
+            assert isinstance (el, dict) 
+            assert isinstance (el['id'], str)
+            assert re.fullmatch (self._re_uuid4, el['id'])
+            assert isinstance (el['ext_id'], str)
+            assert re.fullmatch (self._re_uuid4, el['ext_id'])
+            assert isinstance (el['user_id'], str)
+            assert re.fullmatch (self._re_uuid4, el['user_id'])
+            assert isinstance (el['process_id'], str)
+            assert re.fullmatch (self._re_uuid4, el['process_id'])
+            assert isinstance (el['launched'], str)
+            assert re.fullmatch (self._re_datetime, el['launched'])
+            assert isinstance (el['terminated'], str)
+            assert re.fullmatch (self._re_datetime, el['terminated'])
+            assert isinstance (el['state'], str)
+            assert isinstance (el['num_cores'], int)
+            assert el['num_cores'] > 0
+            assert isinstance (el['mem'], int)
+            assert el['mem'] >= 0
+            assert isinstance (el['ram'], int)
+            assert el['ram'] >= 0
 
 if __name__ == '__main__':
     unittest.main()
