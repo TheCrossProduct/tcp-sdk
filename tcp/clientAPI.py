@@ -59,6 +59,7 @@ class clientResource (slumber.Resource):
     def _process_response (self, resp):
         if not self._store.get('serialize', True):
             return resp
+
         return super (clientResource, self)._process_response(resp)
 
 class clientAPI (slumber.API):
