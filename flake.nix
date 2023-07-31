@@ -33,6 +33,7 @@
           inherit requirements;
           doCheck = false;
           ignoreCollisions=true; 
+          providers={notebook="nixpkgs";};
         };
 
         pyInterpreter = machnix.lib.${system}.mkPython
@@ -40,6 +41,7 @@
           python="python3Full";
           inherit requirements;
           packagesExtra = [module];
+          providers={notebook="nixpkgs";};
         };
 
         default = module;

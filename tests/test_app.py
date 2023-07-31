@@ -213,13 +213,13 @@ class AppTestCase (unittest.TestCase):
       
         import uuid
 
-        first = 'test_remote_'+str(uuid.uuid4())
-        second = 'test_remote_'+str(uuid.uuid4())
+        first = 'test_remote_'+str(uuid.uuid4()).replace ('-','_')
+        second = 'test_remote_'+str(uuid.uuid4()).replace ('-','_')
 
 
         body = {
                 "name": first,
-                "ip": "127.0.0.1"
+                "ip": "127.0.0.1",
                 "usr": "test_user",
                 "mem": "10Gb",
                 "ram": "10Gb",
@@ -296,7 +296,7 @@ class AppTestCase (unittest.TestCase):
         max_element = min (len(resp), 10)
         keys = list(resp.keys())[:max_element]
         remotes = {}
-        for ii in ranges(max_element)
+        for ii in range(max_element):
             remotes[keys[ii]] = resp[keys[ii]]
 
         for key in remotes:
@@ -365,13 +365,16 @@ class AppTestCase (unittest.TestCase):
                    "nl-ams-1",
                    "nl-ams-2",
                    "pl-waw-1",
-                   "pl-waw-2"] in resp:
+                   "pl-waw-2"]:
 
             assert dc in resp
 
     def test_info_get (self):
 
-        resp = self._client.query().app.info.get(Domain="test", App="Helloworld")
+        try:
+            resp = self._client.query().app.info.get(Domain="test", App="helloworld")
+        except tcp.exceptions.HttpClientError as err:
+            print (err.response.text)
 
         assert isinstance (resp, bytes)
 
@@ -465,7 +468,7 @@ class AppTestCase (unittest.TestCase):
         assert isinstance (resp, dict)
         assert len(resp) == 1
         assert 'cost' in resp
-        assert isinstance (resp['cost'), float)
+        assert isinstance (resp['cost'], float)
         assert resp['cost'] < 1.0
 
 if __name__ == '__main__':
