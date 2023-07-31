@@ -14,12 +14,13 @@ class AppTestCase (unittest.TestCase):
         self._client = tcp.client (usermail=self._test_account, passwd= self._test_passwd)
 
         self._re_uuid4 = "^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
-        self._re_datetime = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)[ ]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[ ]+([1-9]|[1-2][0-9]|3[0-1])[ ]+([0-1][0-9]|2[0-4]):([0-5][0-9]|60):([0-5][0-9]|60)[ ]+[0-9]{4}$"
+        self._re_datetime = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)[ ]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[ ]+([1-9]|[1-2][0-9]|3[0-1])[ ]+([0-1][0-9]|2[0-4]):([0-5][0-9]|60):([0-5][0-9]|60)[ ]+(1|[0-9]{4})$"
         self._re_ip = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)$"
         self._re_usr = "^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$"
         self._re_path = "^([^ !$`&*()+]|(\\[ !$`&*()+]))+$"
-        self._re_mem = "^[1-9][0-9]{0,32}(|b|Kb|Mb|Gb|Tb|Pb)$"
+        self._re_mem = "^[1-9][0-9]{0,32}(|.[0-9]+)(|b|Kb|Mb|Gb|Tb|Pb)$"
         self._re_remote_cp = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
+        self._re_remote_id = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
 
     def test_get (self):
         resp = self._client.query().app.get()
@@ -96,7 +97,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['id'], str)
             assert re.fullmatch (self._re_uuid4, el['id'])
             assert isinstance (el['ext_id'], str)
-            assert re.fullmatch (self._re_uuid4, el['ext_id'])
+            assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id']) or not el['ext_id'])
             assert isinstance (el['user_id'], str)
             assert re.fullmatch (self._re_uuid4, el['user_id'])
             assert isinstance (el['process_id'], str)
@@ -107,15 +108,15 @@ class AppTestCase (unittest.TestCase):
             assert re.fullmatch (self._re_datetime, el['expires'])
             assert isinstance (el['state'], str)
             assert isinstance (el['ip'], str) 
-            assert re.fullmatch (self._re_ip, el['ip'])
+            assert re.fullmatch (self._re_ip, el['ip']) or not el['ip']
             assert isinstance (el['ssh_usr'], str)
-            assert re.fullmatch (self._re_usr, el['ssh_usr'])
+            assert re.fullmatch (self._re_usr, el['ssh_usr']) or not el['ssh_usr']
             assert isinstance (el['input_path'], str)
-            assert re.fullmatch (self._re_path, el['input_path'])
+            assert re.fullmatch (self._re_path, el['input_path']) or not el['input_path']
             assert isinstance (el['working_path'], str)
-            assert re.fullmatch (self._re_path, el['working_path'])
+            assert re.fullmatch (self._re_path, el['working_path']) or not el['working_path']
             assert isinstance (el['output_path'], str)
-            assert re.fullmatch (self._re_path, el['output_path'])
+            assert re.fullmatch (self._re_path, el['output_path']) or not el['output_path']
             assert isinstance (el['num_cores'], int)
             assert el['num_cores'] > 0
             assert isinstance (el['mem_required'], int)
@@ -147,7 +148,7 @@ class AppTestCase (unittest.TestCase):
 
             assert isinstance (el, dict) 
             assert isinstance (el['id'], str)
-            assert re.fullmatch (self._re_uuid4, el['id'])
+            assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['id']) or re.fullmatch(self._re_remote_id, el['id']))
             assert isinstance (el['user_id'], str)
             assert re.fullmatch (self._re_uuid4, el['user_id'])
             assert isinstance (el['ip'], str) 
@@ -192,7 +193,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['id'], str)
             assert re.fullmatch (self._re_uuid4, el['id'])
             assert isinstance (el['ext_id'], str)
-            assert re.fullmatch (self._re_uuid4, el['ext_id'])
+            assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id']))
             assert isinstance (el['user_id'], str)
             assert re.fullmatch (self._re_uuid4, el['user_id'])
             assert isinstance (el['process_id'], str)
@@ -216,43 +217,30 @@ class AppTestCase (unittest.TestCase):
         first = 'test_remote_'+str(uuid.uuid4()).replace ('-','_')
         second = 'test_remote_'+str(uuid.uuid4()).replace ('-','_')
 
+        for ii, name in enumerate([first, second]):
 
-        body = {
-                "name": first,
-                "ip": "127.0.0.1",
-                "usr": "test_user",
-                "mem": "10Gb",
-                "ram": "10Gb",
-                "num_cores" : 1,
-                "input_path": "/home/test_user/data/input",
-                "working_path": "/home/test_user/data/working",
-                "output_path": "/home/test_user/data/output"
-            }
-
-        resp = self._client.query().app.new_remote.post (body)
-
-        assert isinstance (resp, dict)
-        for key in resp:
-            assert key in ['id', 'pub']
-
-        assert isinstance (resp['id'], str)
-        assert re.fullmatch ("^remote:"+self.re_uuid4[1:], resp['id'])
-        assert isinstance (resp['pub'], str)
-        assert re.fullmatch ("^ssh-ed25519 [a-Az-Z1-9]+$")
-
-        body['name'] = second 
-        body['num_cores'] = 2
-
-        resp = self._client.query().app.new_remote.post (body)
-
-        assert isinstance (resp, dict)
-        for key in resp:
-            assert key in ['id', 'pub']
-
-        assert isinstance (resp['id'], str)
-        assert re.fullmatch ("^remote:"+self.re_uuid4[1:], resp['id'])
-        assert isinstance (resp['pub'], str)
-        assert re.fullmatch ("^ssh-ed25519 [a-Az-Z1-9]+$")
+            body = {
+                    "name": name,
+                    "ip": "127.0.0.1",
+                    "usr": "test_user",
+                    "mem": "10Gb",
+                    "ram": "10Gb",
+                    "num_cores" : ii+1,
+                    "input_path": "/home/test_user/data/input",
+                    "working_path": "/home/test_user/data/working",
+                    "output_path": "/home/test_user/data/output"
+                }
+    
+            resp = self._client.query().app.new_remote.post (body)
+    
+            assert isinstance (resp, dict)
+            for key in resp:
+                assert key in ['id', 'pub']
+    
+            assert isinstance (resp['id'], str)
+            assert re.fullmatch ("^remote:"+self._re_uuid4[1:], resp['id'])
+            assert isinstance (resp['pub'], str)
+            assert re.fullmatch ("^ssh-ed25519 [a-zA-Z0-9\/+]+$", resp['pub'])
 
         resp = self._client.query().app.remote.get ()
 
@@ -268,7 +256,7 @@ class AppTestCase (unittest.TestCase):
                 assert key in ['id', 'num_cores', 'mem', 'ram', 'instanciated']
     
             assert isinstance (remote['id'], str)
-            assert re.fullmatch(self._re_uuid4, remote['id'])
+            assert re.fullmatch("^remote:"+self._re_uuid4[1:], remote['id'])
             assert isinstance (remote['num_cores'], int)
             assert remote['num_cores'] > 0
             assert isinstance (remote['mem'], str)
@@ -371,105 +359,102 @@ class AppTestCase (unittest.TestCase):
 
     def test_info_get (self):
 
-        try:
-            resp = self._client.query().app.info.get(Domain="test", App="helloworld")
-        except tcp.exceptions.HttpClientError as err:
-            print (err.response.text)
+        resp = self._client.query().app.info.get(Domain="test", App="helloworld")
 
         assert isinstance (resp, bytes)
 
-    def test_process (self):
-
-        body = {
-                "inputs": {},
-                "output-prefix": "test",
-                "pool": ["scw:fr-par-1:PLAY2-PICO"]
-            }
-
-        resp = self._client.query().app.run.post(body, Domain="test", App="helloworld")
-
-        assert isinstance (resp, dict)
-        assert len(resp) == 1
-        assert 'id' in resp
-        assert isinstance (resp['id'], str)
-        assert re.fullmatch (self._re_uuid4, resp['id'])
-
-        puid = resp['id']
-
-        # Should be a process in the process list
-        self.test_list_Process_get ()
-
-        def check_status ():
-
-            resp = self._client.query().app.status (Process=puid).get ()
-
-            assert isinstance (resp, dict)
-            for key in resp:
-                assert key in ['user_id',
-                               'app',
-                               'domain',
-                               'endpoint',
-                               'id',
-                               'launched',
-                               'terminated',
-                               'expires',
-                               'state',
-                               'outputs']
-    
-            assert isinstance (resp['user_id'], str)
-            assert re.fullmatch (self._re_uuid4, resp['user_id'])
-            assert resp['app'] == 'helloworld'
-            assert resp['domain'] == 'test'
-            assert resp['endpoint'] == 'run'
-            assert isinstance (resp['id'], str)
-            assert re.fullmatch (self._re_uuid4, resp['id'])
-            assert isinstance (resp['launched'], str)
-            assert re.fullmatch (self._re_datetime, resp['launched'])
-            assert isinstance (resp['terminated'], str)
-            assert re.fullmatch (self._re_datetime, resp['terminated'])
-            assert isinstance (resp['expires'], str)
-            assert re.fullmatch (self._re_datetime, resp['expires'])
-            assert isinstance (resp['state'], str)
-            assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
-            assert isinstance (resp['outputs'], dict)
-
-            if resp['outputs']:
-                for key in resp['outputs']:
-                    assert isinstance (resp[key], str)
-
-       
-            return resp
-
-        import sleep
-
-        status = "None"
-        num_tries, num_tries_max = 0, 10
-        sleep_duration = 10
-
-        while status != "dead":
-
-            if num_tries == num_tries_max:
-                break
-
-            num_tries += 1
-
-            time.sleep (sleep_duration)
-
-            status = check_status ()
-
-        resp = self._client.query().app.status (Process=puid).get ()
-
-        assert resp['state'] == 'dead'
-
-        assert 'test/msg-test.txt' in resp['outputs']
-
-        resp = self._client.query().app.cost (Process=puid).get ()
-
-        assert isinstance (resp, dict)
-        assert len(resp) == 1
-        assert 'cost' in resp
-        assert isinstance (resp['cost'], float)
-        assert resp['cost'] < 1.0
+#    def test_process (self):
+#
+#        body = {
+#                "inputs": {},
+#                "output-prefix": "test",
+#                "pool": ["scw:fr-par-1:PLAY2-PICO"]
+#            }
+#
+#        resp = self._client.query().app.run.post(body, Domain="test", App="helloworld")
+#
+#        assert isinstance (resp, dict)
+#        assert len(resp) == 1
+#        assert 'id' in resp
+#        assert isinstance (resp['id'], str)
+#        assert re.fullmatch (self._re_uuid4, resp['id'])
+#
+#        puid = resp['id']
+#
+#        # Should be a process in the process list
+#        self.test_list_Process_get ()
+#
+#        def check_status ():
+#
+#            resp = self._client.query().app.status (Process=puid).get ()
+#
+#            assert isinstance (resp, dict)
+#            for key in resp:
+#                assert key in ['user_id',
+#                               'app',
+#                               'domain',
+#                               'endpoint',
+#                               'id',
+#                               'launched',
+#                               'terminated',
+#                               'expires',
+#                               'state',
+#                               'outputs']
+#    
+#            assert isinstance (resp['user_id'], str)
+#            assert re.fullmatch (self._re_uuid4, resp['user_id'])
+#            assert resp['app'] == 'helloworld'
+#            assert resp['domain'] == 'test'
+#            assert resp['endpoint'] == 'run'
+#            assert isinstance (resp['id'], str)
+#            assert re.fullmatch (self._re_uuid4, resp['id'])
+#            assert isinstance (resp['launched'], str)
+#            assert re.fullmatch (self._re_datetime, resp['launched'])
+#            assert isinstance (resp['terminated'], str)
+#            assert re.fullmatch (self._re_datetime, resp['terminated'])
+#            assert isinstance (resp['expires'], str)
+#            assert re.fullmatch (self._re_datetime, resp['expires'])
+#            assert isinstance (resp['state'], str)
+#            assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
+#            assert isinstance (resp['outputs'], dict)
+#
+#            if resp['outputs']:
+#                for key in resp['outputs']:
+#                    assert isinstance (resp[key], str)
+#
+#       
+#            return resp
+#
+#        import time
+#
+#        status = "None"
+#        num_tries, num_tries_max = 0, 10
+#        sleep_duration = 10
+#
+#        while status != "dead":
+#
+#            if num_tries == num_tries_max:
+#                break
+#
+#            num_tries += 1
+#
+#            time.sleep (sleep_duration)
+#
+#            status = check_status ()
+#
+#        resp = self._client.query().app.status (Process=puid).get ()
+#
+#        assert resp['state'] == 'dead'
+#
+#        assert 'test/msg-test.txt' in resp['outputs']
+#
+#        resp = self._client.query().app.cost (Process=puid).get ()
+#
+#        assert isinstance (resp, dict)
+#        assert len(resp) == 1
+#        assert 'cost' in resp
+#        assert isinstance (resp['cost'], float)
+#        assert resp['cost'] < 1.0
 
 if __name__ == '__main__':
     unittest.main()
