@@ -363,98 +363,98 @@ class AppTestCase (unittest.TestCase):
 
         assert isinstance (resp, bytes)
 
-#    def test_process (self):
-#
-#        body = {
-#                "inputs": {},
-#                "output-prefix": "test",
-#                "pool": ["scw:fr-par-1:PLAY2-PICO"]
-#            }
-#
-#        resp = self._client.query().app.run.post(body, Domain="test", App="helloworld")
-#
-#        assert isinstance (resp, dict)
-#        assert len(resp) == 1
-#        assert 'id' in resp
-#        assert isinstance (resp['id'], str)
-#        assert re.fullmatch (self._re_uuid4, resp['id'])
-#
-#        puid = resp['id']
-#
-#        # Should be a process in the process list
-#        self.test_list_Process_get ()
-#
-#        def check_status ():
-#
-#            resp = self._client.query().app.status (Process=puid).get ()
-#
-#            assert isinstance (resp, dict)
-#            for key in resp:
-#                assert key in ['user_id',
-#                               'app',
-#                               'domain',
-#                               'endpoint',
-#                               'id',
-#                               'launched',
-#                               'terminated',
-#                               'expires',
-#                               'state',
-#                               'outputs']
-#    
-#            assert isinstance (resp['user_id'], str)
-#            assert re.fullmatch (self._re_uuid4, resp['user_id'])
-#            assert resp['app'] == 'helloworld'
-#            assert resp['domain'] == 'test'
-#            assert resp['endpoint'] == 'run'
-#            assert isinstance (resp['id'], str)
-#            assert re.fullmatch (self._re_uuid4, resp['id'])
-#            assert isinstance (resp['launched'], str)
-#            assert re.fullmatch (self._re_datetime, resp['launched'])
-#            assert isinstance (resp['terminated'], str)
-#            assert re.fullmatch (self._re_datetime, resp['terminated'])
-#            assert isinstance (resp['expires'], str)
-#            assert re.fullmatch (self._re_datetime, resp['expires'])
-#            assert isinstance (resp['state'], str)
-#            assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
-#            assert isinstance (resp['outputs'], dict)
-#
-#            if resp['outputs']:
-#                for key in resp['outputs']:
-#                    assert isinstance (resp[key], str)
-#
-#       
-#            return resp
-#
-#        import time
-#
-#        status = "None"
-#        num_tries, num_tries_max = 0, 10
-#        sleep_duration = 10
-#
-#        while status != "dead":
-#
-#            if num_tries == num_tries_max:
-#                break
-#
-#            num_tries += 1
-#
-#            time.sleep (sleep_duration)
-#
-#            status = check_status ()
-#
-#        resp = self._client.query().app.status (Process=puid).get ()
-#
-#        assert resp['state'] == 'dead'
-#
-#        assert 'test/msg-test.txt' in resp['outputs']
-#
-#        resp = self._client.query().app.cost (Process=puid).get ()
-#
-#        assert isinstance (resp, dict)
-#        assert len(resp) == 1
-#        assert 'cost' in resp
-#        assert isinstance (resp['cost'], float)
-#        assert resp['cost'] < 1.0
+    def test_process (self):
+
+        body = {
+                "inputs": {},
+                "output-prefix": "test",
+                "pool": ["scw:fr-par-1:PLAY2-PICO"]
+            }
+
+        resp = self._client.query().app.run.post(body, Domain="test", App="helloworld")
+
+        assert isinstance (resp, dict)
+        assert len(resp) == 1
+        assert 'id' in resp
+        assert isinstance (resp['id'], str)
+        assert re.fullmatch (self._re_uuid4, resp['id'])
+
+        puid = resp['id']
+
+        # Should be a process in the process list. We can test it
+        self.test_list_Process_get ()
+
+        def check_status ():
+
+            resp = self._client.query().app.status.get (Process=puid)
+
+            assert isinstance (resp, dict)
+            for key in resp:
+                assert key in ['user_id',
+                               'app',
+                               'domain',
+                               'endpoint',
+                               'id',
+                               'launched',
+                               'terminated',
+                               'expires',
+                               'state',
+                               'outputs']
+    
+            assert isinstance (resp['user_id'], str)
+            assert re.fullmatch (self._re_uuid4, resp['user_id'])
+            assert resp['app'] == 'helloworld'
+            assert resp['domain'] == 'test'
+            assert resp['endpoint'] == 'run'
+            assert isinstance (resp['id'], str)
+            assert re.fullmatch (self._re_uuid4, resp['id'])
+            assert isinstance (resp['launched'], str)
+            assert re.fullmatch (self._re_datetime, resp['launched'])
+            assert isinstance (resp['terminated'], str)
+            assert re.fullmatch (self._re_datetime, resp['terminated'])
+            assert isinstance (resp['expires'], str)
+            assert re.fullmatch (self._re_datetime, resp['expires'])
+            assert isinstance (resp['state'], str)
+            assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
+            assert isinstance (resp['outputs'], dict)
+
+            if resp['outputs']:
+                for key in resp['outputs']:
+                    assert isinstance (resp['outputs'][key], str)
+                    assert resp['outputs'][key].startswith('https://s3')
+       
+            return resp['state']
+
+        import time
+
+        status = "None"
+        num_tries, num_tries_max = 0, 60
+        sleep_duration = 10
+
+        while status != "dead":
+
+            if num_tries == num_tries_max:
+                break
+
+            num_tries += 1
+
+            time.sleep (sleep_duration)
+
+            status = check_status ()
+
+        resp = self._client.query().app.status.get (Process=puid)
+
+        assert resp['state'] == 'dead'
+
+        assert 'test/msg-test.txt' in resp['outputs']
+
+        resp = self._client.query().app.cost.get (Process=puid)
+
+        assert isinstance (resp, dict)
+        assert len(resp) == 1
+        assert 'cost' in resp
+        assert isinstance (resp['cost'], float)
+        assert resp['cost'] < 1.0
 
 if __name__ == '__main__':
     unittest.main()
