@@ -8,8 +8,7 @@ class clientResource (slumber.Resource):
     MAX_RETRIES = 8
     MAX_DELAY = 32
 
-    def help (self):
-
+    def _get_help (self):
         new_uri = self._store["host"] + '/help' + self._store["base_url"].replace(self._store["host"], "")
         self._store.update({"base_url": new_uri} )
 
@@ -21,12 +20,13 @@ class clientResource (slumber.Resource):
             raise err 
 
         try:
-            print (resp.decode('utf-8'))
             return resp.decode('utf-8')
         except UnicodeDecodeError as err:
             raise exceptions.NoDocumentation (f"Unable to decode") from err
-
         return ''
+
+    def help (self):
+        print (self._get_help())
 
     def _retry_in (self, retry):
 
