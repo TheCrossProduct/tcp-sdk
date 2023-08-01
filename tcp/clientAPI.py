@@ -22,8 +22,11 @@ class clientResource (slumber.Resource):
 
         try:
             print (resp.decode('utf-8'))
+            return resp.decode('utf-8')
         except UnicodeDecodeError as err:
             raise exceptions.NoDocumentation (f"Unable to decode") from err
+
+        return ''
 
     def _retry_in (self, retry):
 
