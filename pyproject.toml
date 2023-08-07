@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tcp-sdk"
+description = "Python SDK to query The Cross Product API."
+readme = "README.rst"
+requires-python = ">=3.8"
+dependencies = ["requests", "slumber", "requests_oauthlib"]
+dynamic = ["version"]
+

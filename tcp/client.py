@@ -1,22 +1,27 @@
 import platform
 import requests
 import sys
-import os
 
-from .clientAPI import clientAPI
 from slumber.serialize import Serializer
 from slumber.exceptions import HttpClientError, HttpServerError
 
-from datetime import datetime
-
-from . import __version__
+from .clientAPI import clientAPI
+from . import exceptions 
+from ._version import __version__
 
 class client (object):
 
-    base_url = None
     user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
-    def __init__ (self, host="https://api.thecrossproduct.xyz/v1", token=None, user_agent=None, usermail=None, passwd=None):
+    def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None):
+
+        import os
+
+        if host == None:
+            if 'TCP_HOST' in os.environ.keys ():
+                host = os.environ['TCP_HOST']
+            else:
+                host = "https://api.thecrossproduct.xyz/v1"
 
         self.host = host
 
@@ -32,25 +37,19 @@ class client (object):
 
             from requests.auth import HTTPBasicAuth
             import json
-            from .utils import warning
+            from .logs import warning
 
-            has_login = True
+            resp = clientAPI (self.host, 
+                              self.host,
+                              session=self._make_requests_session(),
+                              auth=HTTPBasicAuth(usermail,passwd),
+                           ).auth.login.get()
 
-            try:
-                resp = clientAPI (self.host, 
-                                  self.host,
-                                  session=self._make_requests_session(),
-                                  auth=HTTPBasicAuth(usermail,passwd),
-                               ).auth.login.get()
-                self.token = resp['token']
-            except (HttpClientError, HttpServerError) as err:
-                warning (str(err))
-                has_login = False
+            self.token = resp['token']
 
         if not self.token:
-            import os
             if 'TCP_API_TOKEN' not in os.environ.keys():
-                sys.exit (1)
+                raise exceptions.InvalidCredentials ("No token available: either use BasicAuth or set the env var $TCP_API_TOKEN") 
 
             self.token = os.environ['TCP_API_TOKEN']
 
@@ -77,6 +76,7 @@ class client (object):
         return api
 
     def _get_endpoints (self):
+
         api = clientAPI (self.host,
                          self.host + '/help',
                          session=self._make_requests_session(),
@@ -101,14 +101,14 @@ class client (object):
                "You can connect to your TCP account by either setting the environment variable TCP_API_TOKEN\n"
                "Alternatively, you can connect using the following code:\n"
                "\n"
-               "import tcp"
-               "client = tcp.client (usermail=\"user@mail.co\", passwd=\"passwd\")"
+               "import tcp\n"
+               "client = tcp.client (usermail=\"user@mail.co\", passwd=\"passwd\")\n"
                "\n"
                "If you're looking to send a GET HTTP request against our API, like:\n"
                "\n"
                " GET https://{hostname}/{vX}/auth\n"
                "\n"
-               "you only need to call the following pythonic code:\n"
+               "You only need to call the following pythonic code:\n"
                "\n"
                "import tcp\n"
                "client = tcp.client ()\n"
@@ -139,8 +139,8 @@ class client (object):
             dest_s3 (str): desired path in TCP S3 bucket
             max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "10Gb") 
 
-        Returns:
-            bool: True if it has successed
+        Exceptions:
+            tcp.exceptions.tcpUploadException
 
         Notes:
 
@@ -153,6 +153,8 @@ class client (object):
                 - POST generate_presigned_multipart_post 
                 - POST complete_multipart_post
         '''
+        import os
+
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
         file_size = str(os.path.getsize(src_local))
@@ -164,7 +166,7 @@ class client (object):
         try:
             resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            return False
+            raise exceptions.UploadException (str(err), err.__dict__)
 
         #2: File's parts loading
         uploadId=resp["upload_id"]
@@ -192,16 +194,22 @@ class client (object):
         if has_failed:
             body['upload_id'] = uploadId
             body['uri'] = dest_s3
-            self.query().data.abort_multipart_post.delete (body)
-            return False
+            self.query().data.abort_multipart_post.post (body)
+
+            number_of_parts_done = len(completed_parts)
+            total_number_of_parts = len(urls)
+
+            raise exceptions.UploadException (f"Part number {number_of_parts_done} failed ({total_number_of_parts} in totals). The multi-part upload was aborted")
 
         #3: Parts concatenation and end of upload
         body["upload_id"] = uploadId
         body["parts"] = completed_parts
         body["uri"] = dest_s3
-        self.query().data.complete_multipart_post.post(body)
 
-        return True
+        try:
+            self.query().data.complete_multipart_post.post(body)
+        except slumber.exceptions.SlumberHttpBaseException as err:
+            raise exceptions.UploadException (str(err), err.__dict__)
 
     def download (self, src_s3, dest_local, chunk_size=8192):
         '''
@@ -212,8 +220,8 @@ class client (object):
             dest_local (str): desired path in your local computer 
             chunk_size (int): desired chunk size for streaming download
 
-        Returns:
-            bool: True if it has successed
+        Exceptions:
+            tcp.exceptions.tcpDownloadException
 
         Notes:
 
@@ -231,7 +239,7 @@ class client (object):
         try:
             resp = self.query ().data.generate_presigned_get.post (body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            return False
+            raise exceptions.DownloadException (str(err), err.__dict__)
 
         url = resp['url']
 
@@ -242,7 +250,5 @@ class client (object):
                     for chunk in r.iter_content(chunk_size=chunk_size):
                         f.write (chunk)
         except requests.exceptions.HTTPError as err:
-            return False
-
-        return True
+            raise exceptions.DownloadException (str(err), err.__dict__)
 

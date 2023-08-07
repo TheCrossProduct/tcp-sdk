@@ -1,23 +1,32 @@
 import time
 import slumber
+from .logs import warning
+from . import exceptions
 
 class clientResource (slumber.Resource):
 
     MAX_RETRIES = 8
     MAX_DELAY = 32
 
-    def help (self):
-
+    def _get_help (self):
         new_uri = self._store["host"] + '/help' + self._store["base_url"].replace(self._store["host"], "")
         self._store.update({"base_url": new_uri} )
 
-        resp = self.get ()
+        try:
+            resp = self.get ()
+        except exceptions.HttpClientError as err:
+            if err.response.status_code == "404":
+                raise exceptions.NoDocumentation(str(err), **err.__dict__) from err
+            raise err 
 
         try:
-            print (resp.decode('utf-8'))
-        except Exception as err:
-            print (err)
-            print ("No documentation available")
+            return resp.decode('utf-8')
+        except UnicodeDecodeError as err:
+            raise exceptions.NoDocumentation (f"Unable to decode") from err
+        return ''
+
+    def help (self):
+        print (self._get_help())
 
     def _retry_in (self, retry):
 
@@ -25,33 +34,35 @@ class clientResource (slumber.Resource):
 
     def _request (self, *args, **kwargs):
 
-        from .utils import error
-
         retry = 0
 
         while True:
             try:
                 return super(clientResource, self)._request(*args, **kwargs)
-            except slumber.exceptions.HttpServerError as exc:
-                if exc.response.status_code not in (502, 503, 504):
-                    raise
+            except slumber.exceptions.HttpClientError as err:
+                if err.response.status_code == 401:
+                    raise exceptions.InvalidCredentials (str(err), **err.__dict__) from err
+                raise exceptions.HttpClientError (str(err), **err.__dict__) from err
+            except slumber.exceptions.HttpServerError as err:
+                if err.response.status_code not in (502, 503, 504):
+                    raise exceptions.HttpServerError (str(err), **err.__dict__) from err
 
             retry += 1
             retry_in = self._retry_in(retry)
 
             if retry >= self.MAX_RETRIES:
-                error (f'API endpoint still in maintenance after {retry} attempts.'
-                        'Stop trying.')
-                raise
+                raise exceptions.HttpServerError(f'API endpoint still in maintenance after {retry} attempts.'
+                                                      'Stop trying.')
 
-            warning (f'API endpoint is currently in maintenance. Try again in'
-                      '{retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})'
+            warning ( 'API endpoint is currently in maintenance. Try again in '
+                     f'{retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})'
                      )
             time.sleep (retry_in)
 
     def _process_response (self, resp):
         if not self._store.get('serialize', True):
             return resp
+
         return super (clientResource, self)._process_response(resp)
 
 class clientAPI (slumber.API):
