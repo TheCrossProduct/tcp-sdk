@@ -1,3 +1,4 @@
+import datetime
 import unittest
 import tcp
 import re
@@ -14,7 +15,6 @@ class AppTestCase (unittest.TestCase):
         self._client = tcp.client (usermail=self._test_account, passwd= self._test_passwd)
 
         self._re_uuid4 = "^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
-        self._re_datetime = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)[ ]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[ ]+([1-9]|[1-2][0-9]|3[0-1])[ ]+([0-1][0-9]|2[0-4]):([0-5][0-9]|60):([0-5][0-9]|60)[ ]+(1|[0-9]{4})$"
         self._re_ip = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)$"
         self._re_usr = "^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$"
         self._re_path = "^([^ !$`&*()+]|(\\[ !$`&*()+]))+$"
@@ -61,11 +61,11 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['endpoint'], str)
             assert el['endpoint'] in ['run', 'quotation']
             assert isinstance (el['launched'], str)
-            assert re.fullmatch (self._re_datetime, el['launched'])
+            datetime.datetime.fromisoformat (el['launched'])
             assert isinstance (el['terminated'], str)
-            assert re.fullmatch (self._re_datetime, el['terminated'])
+            datetime.datetime.fromisoformat (el['terminated'])
             assert isinstance (el['expires'], str)
-            assert re.fullmatch (self._re_datetime, el['expires'])
+            datetime.datetime.fromisoformat (el['expires'])
             assert isinstance (el['state'], str)
 
     def test_list_Instance_get (self):
@@ -103,9 +103,9 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['process_id'], str)
             assert re.fullmatch (self._re_uuid4, el['process_id'])
             assert isinstance (el['launched'], str)
-            assert re.fullmatch (self._re_datetime, el['launched'])
+            datetime.datetime.fromisoformat (el['launched'])
             assert isinstance (el['expires'], str)
-            assert re.fullmatch (self._re_datetime, el['expires'])
+            datetime.datetime.fromisoformat (el['expires'])
             assert isinstance (el['state'], str)
             assert isinstance (el['ip'], str) 
             assert re.fullmatch (self._re_ip, el['ip']) or not el['ip']
@@ -199,9 +199,9 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['process_id'], str)
             assert re.fullmatch (self._re_uuid4, el['process_id'])
             assert isinstance (el['launched'], str)
-            assert re.fullmatch (self._re_datetime, el['launched'])
+            datetime.datetime.fromisoformat (el['launched'])
             assert isinstance (el['terminated'], str)
-            assert re.fullmatch (self._re_datetime, el['terminated'])
+            datetime.datetime.fromisoformat (el['terminated'])
             assert isinstance (el['state'], str)
             assert isinstance (el['num_cores'], int)
             assert el['num_cores'] > 0
@@ -409,11 +409,11 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (resp['id'], str)
             assert re.fullmatch (self._re_uuid4, resp['id'])
             assert isinstance (resp['launched'], str)
-            assert re.fullmatch (self._re_datetime, resp['launched'])
+            datetime.datetime.fromisoformat (resp['launched'])
             assert isinstance (resp['terminated'], str)
-            assert re.fullmatch (self._re_datetime, resp['terminated'])
+            datetime.datetime.fromisoformat (resp['terminated'])
             assert isinstance (resp['expires'], str)
-            assert re.fullmatch (self._re_datetime, resp['expires'])
+            datetime.datetime.fromisoformat (resp['expires'])
             assert isinstance (resp['state'], str)
             assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
             assert isinstance (resp['outputs'], dict)

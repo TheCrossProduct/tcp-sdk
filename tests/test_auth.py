@@ -1,3 +1,4 @@
+import datetime
 import unittest
 import tcp
 import re
@@ -15,7 +16,6 @@ class AuthTestCase (unittest.TestCase):
 
         self._re_jwt = "^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$"
         self._re_uuid4 = "^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
-        self._re_datetime = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)[ ]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[ ]+([1-9]|[1-2][0-9]|3[0-1])[ ]+([0-1][0-9]|2[0-4]):([0-5][0-9]|60):([0-5][0-9]|60)[ ]+(1|[0-9]{4})$"
         self._re_mail = "^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$"
 
     def test_login_get (self):
@@ -50,7 +50,7 @@ class AuthTestCase (unittest.TestCase):
         assert isinstance(resp["user_id"], str)
         assert re.fullmatch(self._re_uuid4, resp["user_id"])
         assert isinstance(resp["expires_at"], str)
-        assert re.fullmatch(self._re_datetime, resp["expires_at"])
+        datetime.datetime.fromisoformat (resp['expires_at'])
         assert isinstance(resp["limit"], int)
         assert resp["limit"] >= 0
         assert isinstance(resp["uses"], int)
@@ -80,11 +80,11 @@ class AuthTestCase (unittest.TestCase):
         assert isinstance(resp["mail"], str)
         assert re.fullmatch(self._re_mail, resp["mail"])
         assert isinstance(resp["created_on"], str)
-        assert re.fullmatch(self._re_datetime, resp["created_on"])
+        datetime.datetime.fromisoformat (resp['created_on'])
         assert isinstance(resp["nbr_activations"], int)
         assert resp["nbr_activations"] >= 0
         assert isinstance(resp["last_activation"], str)
-        assert re.fullmatch(self._re_datetime, resp["last_activation"])
+        datetime.datetime.fromisoformat (resp['last_activation'])
         assert isinstance(resp["group"], list)
         for group in resp["group"]:
             assert isinstance(group, dict)

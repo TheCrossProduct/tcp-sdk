@@ -1,3 +1,4 @@
+import datetime
 import unittest
 import tcp
 import re
@@ -46,13 +47,13 @@ class LicsTestCase (unittest.TestCase):
             assert re.fullmatch (self._re_uuid4, lic['user_id'])
             assert isinstance (lic['scope'], str)
             assert isinstance (lic['created'], str)
-            assert re.fullmatch (self._re_datetime, lic['created'])
+            datetime.datetime.fromisoformat (lic['created'])
             assert isinstance (lic['until'], str)
-            assert re.fullmatch (self._re_datetime, lic['until'])
+            datetime.datetime.fromisoformat (lic['until'])
             assert isinstance (lic['last_used'], str)
-            assert re.fullmatch (self._re_datetime, lic['last_used'])
+            datetime.datetime.fromisoformat (lic['last_used'])
             assert isinstance (lic['last_failed'], str)
-            assert re.fullmatch (self._re_datetime, lic['last_failed'])
+            datetime.datetime.fromisoformat (lic['last_failed'])
             assert isinstance (lic['active'], bool)
             assert isinstance (lic['uses'], float)
             assert lic['uses'] >= 0
