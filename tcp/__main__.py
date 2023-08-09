@@ -1,7 +1,7 @@
 def main ():
 
     import tcp
-    client = client ()
+    client = tcp.client ()
     client.overview ()
 
     return 0
