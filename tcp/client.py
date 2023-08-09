@@ -252,3 +252,48 @@ class client (object):
         except requests.exceptions.HTTPError as err:
             raise exceptions.DownloadException (str(err), err.__dict__)
 
+    def overview (self, refresh_delay=5):
+        '''
+        Print an overview of all processes.
+
+        Args:
+            refresh_delay (int): refresh every X seconds
+        '''
+
+        import prettytable
+        import time
+        import curses
+
+        ignores_fields = ['user_id', 'endpoint', 'terminated', 'expires'] 
+
+        stdscr = curses.initscr()
+        curses.noecho ()
+        curses.cbreak ()
+
+        while True:
+
+            procs = self.query().app.list.Process.get ()
+
+            procs = [{key:proc[key] for key in proc if key not in ignores_fields} for proc in procs]
+
+            table = prettytable.PrettyTable ()
+            table.field_names = procs[0].keys()
+            table.add_rows ([x.values() for x in procs])
+
+            test = table.get_string ()
+
+            try:
+                stdscr.addstr(0,0, test)
+            except:
+                curses.echo ()
+                curses.nocbreak ()
+                curses.endwin ()
+
+            stdscr.refresh ()
+
+            time.sleep (refresh_delay)
+
+            
+            
+
+

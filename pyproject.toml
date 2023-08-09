@@ -7,6 +7,6 @@ name = "tcp-sdk"
 description = "Python SDK to query The Cross Product API."
 readme = "README.rst"
 requires-python = ">=3.8"
-dependencies = ["requests", "slumber", "requests_oauthlib"]
+dependencies = ["requests", "slumber", "requests_oauthlib", "prettytable"]
 dynamic = ["version"]
 

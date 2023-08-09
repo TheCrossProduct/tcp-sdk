@@ -13,3 +13,4 @@ slumber
 requests-oauthlib
 notebook
 setuptools
+prettytable
