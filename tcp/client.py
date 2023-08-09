@@ -263,37 +263,138 @@ class client (object):
         import prettytable
         import time
         import curses
+        import traceback
+        import threading, queue
 
-        ignores_fields = ['user_id', 'endpoint', 'terminated', 'expires'] 
+        ignores_fields = {'Process':['user_id', 'endpoint', 'terminated', 'expires'],
+                          'Remote':['user_id', 'usr', 'input_path', 'output_path', 'working_path'],
+                          'Instance':['user_id', 'expires', 'ip', 'ssh_usr', 'input_path', 'working_path', 'output_path', 'num_cores', 'mem_required', 'ram_required']}
 
-        stdscr = curses.initscr()
-        curses.noecho ()
-        curses.cbreak ()
+        models = ["Process", "Instance", "Remote"]
 
-        while True:
+        text = { "Process": ["No Process"],
+                 "Instance": ["No Instance"],
+                 "Remote": ["No Remote"] }
 
-            procs = self.query().app.list.Process.get ()
+        current = "Process"
+        current_line = 0
 
-            procs = [{key:proc[key] for key in proc if key not in ignores_fields} for proc in procs]
+        text_queue = queue.Queue()
+        text_queue.put (text)
 
-            table = prettytable.PrettyTable ()
-            table.field_names = procs[0].keys()
-            table.add_rows ([x.values() for x in procs])
+        dims = [80, 80]
 
-            test = table.get_string ()
+        stop_updating = threading.Event ()
 
-            try:
-                stdscr.addstr(0,0, test)
-            except:
-                curses.echo ()
-                curses.nocbreak ()
-                curses.endwin ()
+        def update_tables (text_queue):
 
+            def get_table (model):
+
+                entries = self.query().app.list(model).get()
+
+                out = [f"No {model}"]
+
+                if entries:
+
+                    filtered = [{key: entry[key] for key in entry if key not in ignores_fields[model]} for entry in entries]
+
+                    table = prettytable.PrettyTable()
+                    #table.max_table_width = table.min_table_width = dims[1]
+                    #table.max_table_heigth = table.min_table_heigth = dims[0]-5
+
+                    table.field_names = filtered[0].keys ()
+                    table.add_rows ([x.values() for x in filtered])
+
+                    out = table.get_string ().split('\n')
+                
+                return out
+
+            while True:
+
+                text_queue.put ( { "Process": get_table("Process"),
+                         "Instance": get_table("Instance"),
+                         "Remote": get_table("Remote") } )
+
+                if stop_updating.is_set ():
+                   break 
+
+                time.sleep (refresh_delay)
+
+        th = threading.Thread (target=update_tables, args=(text_queue,))
+        th.start ()
+
+        try:
+            stdscr = curses.initscr()
+            curses.noecho ()
+            curses.cbreak ()
+            curses.halfdelay(10*refresh_delay)
+            stdscr.keypad(1)
+
+            should_exit = False
+
+            current_pos = 0
+
+            while not should_exit:
+    
+                dims = stdscr.getmaxyx()
+
+                if dims[0] < 40 and dims[1] < 40:
+                    stdscr.addstr (0, 0, "screen should be at least 40x40...")
+                    continue
+
+                sections = []
+                for model in models:
+                    if model == current:
+                        sections.append (f'<{model}>')
+                    else:
+                        sections.append (model)
+
+                footnote = '|'.join(sections)+'\n'
+                footnote += 'Press q to quit. Press up and down arrow to scroll. Press left and right to select which table.'
+
+                if text_queue.qsize() > 0:
+                    text = text_queue.get ()
+    
+                stdscr.clear ()
+                stdscr.addstr(0, 0, '\n'.join(text[current][current_line:min(len(text[current]), dims[0]-5)]))
+                stdscr.addstr(dims[0]-2, 0, footnote)
+
+                stdscr.refresh ()
+
+                try:
+                    ch = stdscr.getch ()
+                except:
+                    pass                 
+
+                if ch == curses.KEY_LEFT:
+                    index_current = models.index(current)
+                    index_current = max(0, index_current-1)
+                    current = models[index_current]
+                    current_line = 0
+                elif ch == curses.KEY_RIGHT:
+                    index_current = models.index(current)
+                    index_current = min (len(models)-1, index_current+1)
+                    current = models[index_current]
+                    current_line = 0
+                elif ch == curses.KEY_UP:
+                    current_line = max(0, current_line-1)
+                elif ch == curses.KEY_DOWN:
+                    current_line = min(max(0,(len(text[current])-dims[0]+5)), current_line+1)
+                elif ch == ord('q'):
+                    should_exit = True
+
+                curses.flushinp()
+            stdscr.clear ()
+            stdscr.addstr ("Exiting...")
             stdscr.refresh ()
 
-            time.sleep (refresh_delay)
+        finally:
 
-            
-            
+            stop_updating.set ()
+            th.join()
 
+            stdscr.keypad(0)
+            curses.echo(); curses.nocbreak()
+            curses.endwin()
+            traceback.print_exc()
 
