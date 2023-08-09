@@ -45,5 +45,9 @@ setup (
 
     packages = find_packages(),
 
+    entry_points = {
+        'console_scripts': ['tcp=tcp.__main__:main']
+    },
+
     test_suite = "tests.get_tests",
 )

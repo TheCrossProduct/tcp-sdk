@@ -128,7 +128,8 @@ class client (object):
                "\n"
                "help\t\t- this message\n"
                "download\t- from TCP S3 storage to your local storage\n"
-               "upload\t\t- from your local storage to TCP S3 storage\n")
+               "upload\t\t- from your local storage to TCP S3 storage\n"
+               "overview\t\t- interactive overview of your ongoing processes, remotes and instances")
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None):
         '''
