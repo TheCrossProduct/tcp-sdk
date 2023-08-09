@@ -363,13 +363,7 @@ class AppTestCase (unittest.TestCase):
 
         assert isinstance (resp, bytes)
 
-    def test_process (self):
-
-        body = {
-                "inputs": {},
-                "output-prefix": "test",
-                "pool": ["scw:fr-par-1:PLAY2-PICO"]
-            }
+    def process (self, body):
 
         resp = self._client.query().app.run.post(body, Domain="test", App="helloworld")
 
@@ -455,6 +449,39 @@ class AppTestCase (unittest.TestCase):
         assert 'cost' in resp
         assert isinstance (resp['cost'], float)
         assert resp['cost'] < 1.0
+
+    def test_scaleway_process (self):
+
+        pool = ["scw:fr-par-1:PLAY2-PICO"]        
+        body = {
+                "inputs": {},
+                "output-prefix": "test",
+                "pool": pool 
+            }
+
+        self.process (body) 
+
+#    def test_aws_process (self):
+#
+#        import os 
+#
+#        for field in ["AWS_ACCESS_KEY_ID",
+#                      "AWS_SECRET_ACCESS_KEY",
+#                      "AWS_S3_BUCKET",
+#                      "AWS_REGION"]
+#            assert field in os.environ 
+#
+#        creds = {
+#            "aws": {
+#                "access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+#                "secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+#                "s3_bucket": os.environ["AWS_S3_BUCKET"],
+#                }
+#            } 
+#
+#        pool = ["aws:{}:t2.micro".format(os.environ["AWS_REGION"])]        
+#
+#        self.process (pool) 
 
 if __name__ == '__main__':
     unittest.main()
