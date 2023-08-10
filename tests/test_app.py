@@ -274,9 +274,12 @@ class AppTestCase (unittest.TestCase):
         assert self._client.query().app.remote(first).delete ()
         assert self._client.query().app.remote(second).delete ()
 
-    def test_remote_cp_get_post (self):
+    def check_remote_cp_get_post (self, cloud_providor, creds=None):
 
-        resp = self._client.query().app.remote("scw").get ()
+        if creds:
+            resp = self._client.query().app.remote(cloud_providor).get ()
+        else:
+            resp = self._client.query().app.remote(cloud_providor).post (creds)
 
         assert isinstance(resp, dict)
 
@@ -338,6 +341,28 @@ class AppTestCase (unittest.TestCase):
             assert re.fullmatch (self._re_mem, remote['ram'])
             assert isinstance(remote['cores'], int)            
             assert remote['cores'] > 0
+
+    def test_remote_scw_get_post (self):
+        return self.check_remote_cp_get_post ('scw')
+
+    def test_remote_aws_get_post (self):
+        import os 
+
+        for field in ["AWS_ACCESS_KEY_ID",
+                      "AWS_SECRET_ACCESS_KEY",
+                      "AWS_S3_BUCKET",
+                      "AWS_REGION"]
+            assert field in os.environ 
+
+        creds = {
+            "aws": {
+                "access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+                "secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+                "s3_bucket": os.environ["AWS_S3_BUCKET"],
+                }
+            } 
+
+        return self.check_remote_cp_get_post ('aws', creds)
 
     def test_datacenters_get_post (self):
 
