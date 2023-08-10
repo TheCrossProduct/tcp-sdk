@@ -129,7 +129,7 @@ class client (object):
                "help\t\t- this message\n"
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
-               "overview\t\t- interactive overview of your ongoing processes, remotes and instances")
+               "dashboard\t- interactive overview of your account ressources")
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None):
         '''
@@ -253,7 +253,7 @@ class client (object):
         except requests.exceptions.HTTPError as err:
             raise exceptions.DownloadException (str(err), err.__dict__)
 
-    def overview (self, refresh_delay=5):
+    def dashboard (self, refresh_delay=5):
         '''
         Print an overview of all processes.
 
@@ -269,13 +269,19 @@ class client (object):
 
         ignores_fields = {'Process':['user_id', 'endpoint', 'terminated', 'expires'],
                           'Remote':['user_id', 'usr', 'input_path', 'output_path', 'working_path'],
-                          'Instance':['user_id', 'expires', 'ip', 'ssh_usr', 'input_path', 'working_path', 'output_path', 'num_cores', 'mem_required', 'ram_required']}
-
-        models = ["Process", "Instance", "Remote"]
+                          'Instance':['user_id', 'expires', 'ip', 'ssh_usr', 'input_path', 'working_path', 'output_path', 'num_cores', 'mem_required', 'ram_required'],
+                          'License':['user_id', 'created', 'last_failed', 'active']
+                          }
+            
+        models = [(self.query().app.list("Process"), "Process"), 
+                  (self.query().app.list("Process"), "Instance"), 
+                  (self.query().app.list("Process"), "Remote"),
+                  (self.query().lics, "License")]
 
         text = { "Process": ["No Process"],
                  "Instance": ["No Instance"],
-                 "Remote": ["No Remote"] }
+                 "Remote": ["No Remote"],
+                 "License": ["No License"]}
 
         current = "Process"
         current_line = 0
@@ -289,9 +295,9 @@ class client (object):
 
         def update_tables (text_queue):
 
-            def get_table (model):
+            def get_table (endpoint, model):
 
-                entries = self.query().app.list(model).get()
+                entries = endpoint.get()
 
                 out = [f"No {model}"]
 
@@ -312,9 +318,7 @@ class client (object):
 
             while True:
 
-                text_queue.put ( { "Process": get_table("Process"),
-                         "Instance": get_table("Instance"),
-                         "Remote": get_table("Remote") } )
+                text_queue.put ( { model: get_table(endpoint, model) for endpoint, model in models} )
 
                 if stop_updating.is_set ():
                    break 
@@ -344,7 +348,7 @@ class client (object):
                     continue
 
                 sections = []
-                for model in models:
+                for model in [m[1] for m in models]:
                     if model == current:
                         sections.append (f'<{model}>')
                     else:
@@ -368,14 +372,14 @@ class client (object):
                     pass                 
 
                 if ch == curses.KEY_LEFT:
-                    index_current = models.index(current)
+                    index_current = list([m[1] for m in models]).index(current)
                     index_current = max(0, index_current-1)
-                    current = models[index_current]
+                    current = models[index_current][1]
                     current_line = 0
                 elif ch == curses.KEY_RIGHT:
-                    index_current = models.index(current)
+                    index_current = list([m[1] for m in models]).index(current)
                     index_current = min (len(models)-1, index_current+1)
-                    current = models[index_current]
+                    current = models[index_current][1]
                     current_line = 0
                 elif ch == curses.KEY_UP:
                     current_line = max(0, current_line-1)
@@ -385,6 +389,7 @@ class client (object):
                     should_exit = True
 
                 curses.flushinp()
+
             stdscr.clear ()
             stdscr.addstr ("Exiting...")
             stdscr.refresh ()
