@@ -203,7 +203,7 @@ def dashboard (client, refresh_delay):
 
             stdscr.addstr(1, 0, '\n'.join(text[current][current_line:min(len(text[current]), dims[0]-5)]), curses.color_pair(0))
 
-            stdscr.addstr(dims[0]-1, 0, ' '*dims[1], curses.color_pair(1))
+            stdscr.addstr(dims[0]-1, 0, ' '*(dims[1]-1), curses.color_pair(1))
             stdscr.addstr(dims[0]-1, 0, footnote, curses.color_pair(1))
 
             stdscr.refresh ()
