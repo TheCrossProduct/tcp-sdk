@@ -276,7 +276,7 @@ class AppTestCase (unittest.TestCase):
 
     def check_remote_cp_get_post (self, cloud_providor, creds=None):
 
-        if creds:
+        if not creds:
             resp = self._client.query().app.remote(cloud_providor).get ()
         else:
             resp = self._client.query().app.remote(cloud_providor).post (creds)

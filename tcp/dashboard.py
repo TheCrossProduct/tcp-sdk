@@ -158,12 +158,17 @@ def dashboard (client, refresh_delay):
 
     ch = ''
 
+
     try:
         stdscr = curses.initscr()
         curses.noecho ()
         curses.cbreak ()
         curses.halfdelay(10*refresh_delay)
         stdscr.keypad(1)
+
+        curses.start_color ()
+        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(2, curses.COLOR_CYAN, curses.COLOR_WHITE)
 
         should_exit = False
 
@@ -173,26 +178,33 @@ def dashboard (client, refresh_delay):
 
             dims = stdscr.getmaxyx()
 
+            stdscr.clear ()
+
             if dims[0] < 40 and dims[1] < 40:
                 stdscr.addstr (0, 0, "screen should be at least 40x40...")
                 continue
 
-            sections = []
+            stdscr.addstr (0,0, ' '*dims[1], curses.color_pair(1))
+            section_x_offset = 0
             for section in text.keys():
-                if section == current:
-                    sections.append (f'<{section}>')
-                else:
-                    sections.append (section)
+                headline = f" > {section}"
 
-            footnote = '|'.join(sections)+'\n'
-            footnote += 'Press q to quit. Press up and down arrow to scroll. Press left and right to select which table.'
+                if section == current:
+                    stdscr.addstr (0, section_x_offset, headline, curses.color_pair(2))                    
+                else:
+                    stdscr.addstr (0, section_x_offset, headline, curses.color_pair(1))                    
+
+                section_x_offset += len(headline)
+
+            footnote = 'Press q to quit. Press up and down arrow to scroll. Press left and right to select which table.'
 
             if text_queue.qsize() > 0:
                 text = text_queue.get ()
 
-            stdscr.clear ()
-            stdscr.addstr(0, 0, '\n'.join(text[current][current_line:min(len(text[current]), dims[0]-5)]))
-            stdscr.addstr(dims[0]-2, 0, footnote)
+            stdscr.addstr(1, 0, '\n'.join(text[current][current_line:min(len(text[current]), dims[0]-5)]), curses.color_pair(0))
+
+            stdscr.addstr(dims[0]-1, 0, ' '*dims[1], curses.color_pair(1))
+            stdscr.addstr(dims[0]-1, 0, footnote, curses.color_pair(1))
 
             stdscr.refresh ()
 
