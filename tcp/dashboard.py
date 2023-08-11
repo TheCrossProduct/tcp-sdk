@@ -123,7 +123,7 @@ class TableData:
 
         for prefix in self.entries:
             if prefix != "files":
-                all_files += ['prefix@'+x for x in self.entries[prefix]]
+                all_files += [f'{prefix}@{x}' for x in self.entries[prefix]]
             else:
                 all_files += self.entries[prefix]
 
@@ -204,7 +204,7 @@ def update_position (text, model, height, pos_table_screen, pos_cursor_screen, p
     if pos_cursor_screen + diff < 0:
         pos_table_screen = max(0,pos_table_screen+diff)
     if pos_cursor_screen + diff > height:
-        pos_table_screen = min(pos_table_screen+diff, height) 
+        pos_table_screen = min(pos_table_screen+diff, len(text)-height) 
 
     # finally update cursor
     pos_cursor_screen = min(max(0, pos_cursor_screen + diff), height) 
