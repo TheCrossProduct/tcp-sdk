@@ -60,7 +60,10 @@ class TableFromDB:
 
     def load (self):
 
-        self.entries = self.endpoint.get ()
+        try:
+            self.entries = self.endpoint.get ()
+        except (exceptions.HttpClientError, exceptions.HttpServerError) as err:
+            print (err.content)
 
         if not self.entries:
             return [f"No {self.model}"]
@@ -73,21 +76,23 @@ class TableFromDB:
         return self.display ()
 
     def display (self):
+
         import prettytable
 
         if not self.entries:
             return [f"No {self.model}"]
 
         table = prettytable.PrettyTable()
-#        table.max_table_width = table.min_table_width = width 
-#        table.max_table_height = table.min_table_height = height 
+        table.max_table_width = table.min_table_width = self.width -1
+        table.max_table_height = table.min_table_height = self.height -1 
         table.field_names = self.entries[0].keys ()
         table.add_rows ([x.values() for x in self.entries])
 
         out = table.get_string ().split('\n')
+
         return out
 
-def update_tables (refresh_delay, text_queue, stop_updating, client, width, height):
+def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, width, height):
 
     import time
 
@@ -113,6 +118,16 @@ def update_tables (refresh_delay, text_queue, stop_updating, client, width, heig
 
     while True:
 
+        if arg_queue.qsize() > 0:
+
+            new_args = arg_queue.get ()
+
+            width = new_args['width']
+            height = new_args['height']
+
+            for tt in tables:
+                tt.width, tt.height = width, height
+
         updated_text = { table.model: table.load()  for table in tables}
 
         updated_text['Data'] = ["No Data"]
@@ -123,6 +138,46 @@ def update_tables (refresh_delay, text_queue, stop_updating, client, width, heig
            break 
 
         time.sleep (refresh_delay)
+
+def update_position (text, model, height, pos_table_screen, pos_cursor_screen, pos_cursor_table, offset):
+
+    if model == "Data":
+        return
+
+    # TECHDEBT: This should not work for abs(offset) > 1
+
+    pos_of_plus = []
+
+    for ii, line in enumerate(text):
+        if line.startswith('+'):
+            pos_of_plus.append (ii)
+
+    print (pos_of_plus)
+
+    if not pos_of_plus:
+        return 0, 0, 0
+
+    # First update pos_cursor_table: 
+    #   - pin to closest plus
+    for ii, pos in enumerate(pos_of_plus):
+        if pos > pos_cursor_table:
+            break
+
+    new_pos_cursor_table = pos_of_plus[min(max(0, ii+offset), len(pos_of_plus)-1)]
+    diff = new_pos_cursor_table - pos_cursor_table
+    pos_cursor_table = new_pos_cursor_table
+
+    # Then update table on screen:
+    if pos_cursor_screen + diff < 0:
+        pos_table_screen += max(0,diff)
+    if pos_cursor_screen + diff > height:
+        pos_table_screen += min(diff, height) 
+
+    # finally update cursor
+    pos_cursor_screen = min(max(0, pos_cursor_screen+diff), height) 
+
+    return pos_table_screen, pos_cursor_screen, pos_cursor_table
+
 
 def dashboard (client, refresh_delay):
     import curses
@@ -136,12 +191,25 @@ def dashboard (client, refresh_delay):
              "Data": ["No Data"]}
 
     current = "Process"
-    current_line = 0
+
+    pos_cursor_screen = { model:0 for model in text.keys() }
+    pos_table_screen = { model:0 for model in text.keys() }
+    pos_cursor_table = { model:0 for model in text.keys() } 
+
+    dims = [80, 80]
+    ch = ''
+
+    offset_screen_x, offset_screen_y = 1, 1
+    substract_to_screen_x, substract_to_screen_y = 0,5
+    screen_width = dims[1] - offset_screen_x - substract_to_screen_x
+    screen_height = dims[0] - offset_screen_y - substract_to_screen_y
 
     text_queue = queue.Queue()
     text_queue.put (text)
 
-    dims = [80, 80]
+    arg_queue = queue.Queue()
+    arg_queue.put({'width':  screen_width, 
+                   'height': screen_height})
 
     stop_updating = threading.Event ()
 
@@ -149,15 +217,13 @@ def dashboard (client, refresh_delay):
             target=update_tables, 
             args=(refresh_delay, 
                   text_queue, 
+                  arg_queue,
                   stop_updating, 
                   client, 
                   dims[1], 
                   dims[0]-5))
 
     th.start ()
-
-    ch = ''
-
 
     try:
         stdscr = curses.initscr()
@@ -172,11 +238,17 @@ def dashboard (client, refresh_delay):
 
         should_exit = False
 
-        current_pos = 0
-
         while not should_exit:
 
-            dims = stdscr.getmaxyx()
+            queried_dims = stdscr.getmaxyx()
+
+            if queried_dims[0] != dims[0] or queried_dims[1] != dims[1]:
+                dims = queried_dims
+                screen_width = dims[1] - offset_screen_x - substract_to_screen_x
+                screen_height = dims[0] - offset_screen_y - substract_to_screen_y
+
+                arg_queue.put({'width':  screen_width, 
+                               'height': screen_height})
 
             stdscr.clear ()
 
@@ -185,6 +257,7 @@ def dashboard (client, refresh_delay):
                 continue
 
             stdscr.addstr (0,0, ' '*dims[1], curses.color_pair(1))
+
             section_x_offset = 0
             for section in text.keys():
                 headline = f" > {section}"
@@ -201,10 +274,13 @@ def dashboard (client, refresh_delay):
             if text_queue.qsize() > 0:
                 text = text_queue.get ()
 
-            stdscr.addstr(1, 0, '\n'.join(text[current][current_line:min(len(text[current]), dims[0]-5)]), curses.color_pair(0))
+            for ll, line in enumerate(text[current][pos_table_screen[current]:min(len(text[current]), pos_table_screen[current] + screen_height)]):
+                stdscr.addstr(offset_screen_y+ll, offset_screen_x, line, curses.color_pair(0))
 
             stdscr.addstr(dims[0]-1, 0, ' '*(dims[1]-1), curses.color_pair(1))
             stdscr.addstr(dims[0]-1, 0, footnote, curses.color_pair(1))
+
+            stdscr.addstr (pos_cursor_screen[current]+offset_screen_y, 0, '>', curses.color_pair(2))
 
             stdscr.refresh ()
 
@@ -214,20 +290,27 @@ def dashboard (client, refresh_delay):
                 pass                 
 
             if ch == curses.KEY_LEFT:
+
                 index_current = list(text.keys()).index(current)
                 index_current = max(0, index_current-1)
                 current = list(text.keys())[index_current]
-                current_line = 0
+
             elif ch == curses.KEY_RIGHT:
+
                 index_current = list(text.keys()).index(current)
                 index_current = min (len(text)-1, index_current+1)
                 current = list(text.keys())[index_current]
-                current_line = 0
+
             elif ch == curses.KEY_UP:
-                current_line = max(0, current_line-1)
+
+                pos_table_screen[current], pos_cursor_screen[current], pos_cursor_table[current] = update_position (text[current], current, screen_height, pos_table_screen[current], pos_cursor_screen[current], pos_cursor_table[current], -1)
+
             elif ch == curses.KEY_DOWN:
-                current_line = min(max(0,(len(text[current])-dims[0]+5)), current_line+1)
+
+                pos_table_screen[current], pos_cursor_screen[current], pos_cursor_table[current] = update_position (text[current], current, screen_height, pos_table_screen[current], pos_cursor_screen[current], pos_cursor_table[current], 1)
+
             elif ch == ord('q'):
+
                 should_exit = True
 
             curses.flushinp()
