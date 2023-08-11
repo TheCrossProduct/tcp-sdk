@@ -59,6 +59,7 @@ class TableFromDB:
         self.entries = None
 
     def load (self):
+        from . import exceptions
 
         try:
             self.entries = self.endpoint.get ()
@@ -92,6 +93,41 @@ class TableFromDB:
 
         return out
 
+class TableData:
+
+    def __init__ (self, endpoint):
+
+        self.endpoint = endpoint
+        self.model = 'Data'
+
+    def load (self):
+        from . import exceptions
+
+        try:
+            self.entries = self.endpoint.get ()
+        except (exceptions.HttpClientError, exceptions.HttpServerError) as err:
+            print (err.content)
+
+        if not self.entries:
+            return [f"No {self.model}"]
+
+        return self.display ()
+
+    def display (self):
+
+        all_files = []
+
+        for prefix in self.entries:
+            if prefix != "files":
+                all_files.append('prefix@'+self.entries[prefix])
+            else:
+                all_files.append(self.entries[prefix])
+
+
+        out = [f'+ {x}' for x in all_files]
+
+        return out
+
 def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, width, height):
 
     import time
@@ -115,6 +151,7 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
             }
 
     tables = [ TableFromDB (endpoint, name, ignores[name], sorting_atts[name], width, height) for endpoint, name in models ]
+    tables.append (TableData (client.query().data.get()))
 
     while True:
 
@@ -130,8 +167,6 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
 
         updated_text = { table.model: table.load()  for table in tables}
 
-        updated_text['Data'] = ["No Data"]
-
         text_queue.put ( updated_text )
 
         if stop_updating.is_set ():
@@ -140,9 +175,6 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
         time.sleep (refresh_delay)
 
 def update_position (text, model, height, pos_table_screen, pos_cursor_screen, pos_cursor_table, offset):
-
-    if model == "Data":
-        return
 
     # TECHDEBT: This should not work for abs(offset) > 1
 
