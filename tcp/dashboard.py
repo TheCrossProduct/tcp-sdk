@@ -14,6 +14,9 @@ def prettier_fields (entries, model):
 
     from datetime import datetime   
 
+    if not entries:
+        return entries
+
     out = entries
 
     if model == "License":
@@ -33,6 +36,7 @@ def prettier_fields (entries, model):
     return out 
 
 def sort_by_att (entries, att):
+    from datetime import datetime
 
     if not entries:
         return entries
@@ -41,7 +45,7 @@ def sort_by_att (entries, att):
         return entries
 
     if is_datetime_format(entries[0][att]):
-        return entries.sort (key=lambda x: datetime.fromisoformat(x), reverse=True)
+        return entries.sort (key=lambda x: datetime.fromisoformat(x[att]), reverse=True)
 
     return entries.sort (key=lambda x: x[att], reverse=True) 
 
@@ -119,10 +123,9 @@ class TableData:
 
         for prefix in self.entries:
             if prefix != "files":
-                all_files.append('prefix@'+self.entries[prefix])
+                all_files += ['prefix@'+x for x in self.entries[prefix]]
             else:
-                all_files.append(self.entries[prefix])
-
+                all_files += self.entries[prefix]
 
         out = [f'+ {x}' for x in all_files]
 
@@ -151,7 +154,7 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
             }
 
     tables = [ TableFromDB (endpoint, name, ignores[name], sorting_atts[name], width, height) for endpoint, name in models ]
-    tables.append (TableData (client.query().data.get()))
+    tables.append (TableData (client.query().data))
 
     while True:
 
@@ -184,8 +187,6 @@ def update_position (text, model, height, pos_table_screen, pos_cursor_screen, p
         if line.startswith('+'):
             pos_of_plus.append (ii)
 
-    print (pos_of_plus)
-
     if not pos_of_plus:
         return 0, 0, 0
 
@@ -195,18 +196,18 @@ def update_position (text, model, height, pos_table_screen, pos_cursor_screen, p
         if pos > pos_cursor_table:
             break
 
-    new_pos_cursor_table = pos_of_plus[min(max(0, ii+offset), len(pos_of_plus)-1)]
+    new_pos_cursor_table = pos_of_plus[min(max(0, (ii-1)+offset), len(pos_of_plus)-1)]
     diff = new_pos_cursor_table - pos_cursor_table
     pos_cursor_table = new_pos_cursor_table
 
     # Then update table on screen:
     if pos_cursor_screen + diff < 0:
-        pos_table_screen += max(0,diff)
+        pos_table_screen = max(0,pos_table_screen+diff)
     if pos_cursor_screen + diff > height:
-        pos_table_screen += min(diff, height) 
+        pos_table_screen = min(pos_table_screen+diff, height) 
 
     # finally update cursor
-    pos_cursor_screen = min(max(0, pos_cursor_screen+diff), height) 
+    pos_cursor_screen = min(max(0, pos_cursor_screen + diff), height) 
 
     return pos_table_screen, pos_cursor_screen, pos_cursor_table
 
