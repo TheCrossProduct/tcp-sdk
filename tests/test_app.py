@@ -351,7 +351,7 @@ class AppTestCase (unittest.TestCase):
         for field in ["AWS_ACCESS_KEY_ID",
                       "AWS_SECRET_ACCESS_KEY",
                       "AWS_S3_BUCKET",
-                      "AWS_REGION"]
+                      "AWS_REGION"]:
             assert field in os.environ 
 
         creds = {
