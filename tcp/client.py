@@ -156,6 +156,21 @@ class client (object):
         '''
         import os
 
+        # Uploading directory
+        if os.path.isdir (src_local):
+            root_in_s3 = os.path.basename (src_local)
+
+            for root, dirs, files in os.walk (src_local):
+                for file in files:
+                    self.upload (os.path.join(root,file), 
+                                 os.path.join(
+                                     os.path.join(dest_s3,root_in_s3), 
+                                     os.path.join(root[len(src_local):],file)
+                                     ),
+                                 max_part_size
+                                 )
+            return
+
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
         file_size = str(os.path.getsize(src_local))
