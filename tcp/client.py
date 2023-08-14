@@ -215,7 +215,7 @@ class client (object):
             number_of_parts_done = len(completed_parts)
             total_number_of_parts = len(urls)
 
-            raise exceptions.UploadException (f"Part number {number_of_parts_done} failed ({total_number_of_parts} in totals). The multi-part upload was aborted")
+            raise exceptions.UploadError (f"Part number {number_of_parts_done} failed ({total_number_of_parts} in totals). The multi-part upload was aborted")
 
         #3: Parts concatenation and end of upload
         body["upload_id"] = uploadId

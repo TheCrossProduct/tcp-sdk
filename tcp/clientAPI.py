@@ -68,7 +68,7 @@ class clientResource (slumber.Resource):
 class clientAPI (slumber.API):
     resource_class = clientResource
 
-    def __init__ (self, host=None, base_url=None, auth=None, format=None, append_slash=True, session=None, serializer=None):
+    def __init__ (self, host=None, base_url=None, auth=None, format=None, append_slash=False, session=None, serializer=None):
 
         super ().__init__ (base_url, auth, format, append_slash, session, serializer)
         self._store.update ({"host": host})
