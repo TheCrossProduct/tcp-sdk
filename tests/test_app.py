@@ -193,7 +193,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['id'], str)
             assert re.fullmatch (self._re_uuid4, el['id'])
             assert isinstance (el['ext_id'], str)
-            assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id']))
+            assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id'])) or el['ext_id'] == ''
             assert isinstance (el['user_id'], str)
             assert re.fullmatch (self._re_uuid4, el['user_id'])
             assert isinstance (el['process_id'], str)

@@ -45,9 +45,9 @@ def sort_by_att (entries, att):
         return entries
 
     if is_datetime_format(entries[0][att]):
-        return entries.sort (key=lambda x: datetime.fromisoformat(x[att]), reverse=True)
+        return sorted (entries, key=lambda x: datetime.fromisoformat(x[att]), reverse=True)
 
-    return entries.sort (key=lambda x: x[att], reverse=True) 
+    return sorted (entries, key=lambda x: x[att], reverse=True) 
 
 class TableFromDB:
 
@@ -68,7 +68,8 @@ class TableFromDB:
         try:
             self.entries = self.endpoint.get ()
         except (exceptions.HttpClientError, exceptions.HttpServerError) as err:
-            print (err.content)
+            with open (f"log-dashboard.txt", 'a') as f:
+                f.write (f"TableFrom{self.model}: {err.content}")
 
         if not self.entries:
             return [f"No {self.model}"]
@@ -110,7 +111,8 @@ class TableData:
         try:
             self.entries = self.endpoint.get ()
         except (exceptions.HttpClientError, exceptions.HttpServerError) as err:
-            print (err.content)
+            with open (f"log-dashboard.txt", 'a') as f:
+                f.write (f"TableData: {err.content}")
 
         if not self.entries:
             return [f"No {self.model}"]
@@ -134,6 +136,7 @@ class TableData:
 def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, width, height):
 
     import time
+    from datetime import datetime
 
     models = [(client.query().app.list("Process"), "Process"), 
               (client.query().app.list("Instance"),"Instance"), 
@@ -153,8 +156,8 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
         'License': 'created'
             }
 
-    tables = [ TableFromDB (endpoint, name, ignores[name], sorting_atts[name], width, height) for endpoint, name in models ]
-    tables.append (TableData (client.query().data))
+    tables = { name: TableFromDB (endpoint, name, ignores[name], sorting_atts[name], width, height) for endpoint, name in models }
+    tables['Data'] = TableData (client.query().data)
 
     while True:
 
@@ -165,10 +168,12 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
             width = new_args['width']
             height = new_args['height']
 
-            for tt in tables:
-                tt.width, tt.height = width, height
+            for model in tables:
+                tables[model].width, tables[model].height = width, height
 
-        updated_text = { table.model: table.load()  for table in tables}
+        updated_text = {}
+        for model in tables:
+            updated_text[model] = tables[model].load()
 
         text_queue.put ( updated_text )
 
