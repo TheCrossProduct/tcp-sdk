@@ -2,11 +2,12 @@ import platform
 import requests
 import sys
 
-from slumber.serialize import Serializer
+from slumber.serialize import Serializer, JsonSerializer
 from slumber.exceptions import HttpClientError, HttpServerError
 
 from .clientAPI import clientAPI
 from . import exceptions 
+from .text_serializer import PlainTextSerializer        
 from ._version import __version__
 
 class client (object):
@@ -70,7 +71,9 @@ class client (object):
         api = clientAPI (self.host,
                          self.host,
                          session=self._make_requests_session(),
-                         serializer=Serializer(default="json"),
+                         serializer=Serializer(default="json",
+                                               serializers=[JsonSerializer(), 
+                                                            PlainTextSerializer()]),
                          **kwargs)
 
         return api
@@ -80,7 +83,9 @@ class client (object):
         api = clientAPI (self.host,
                          self.host + '/help',
                          session=self._make_requests_session(),
-                         serializer=Serializer(default="json"))
+                         serializer=Serializer(default="json",
+                                               serializers=[JsonSerializer(), 
+                                                            PlainTextSerializer()]))
 
         return api._get_resource(**api._store).get()
 

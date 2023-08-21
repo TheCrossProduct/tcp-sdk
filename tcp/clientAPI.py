@@ -37,6 +37,7 @@ class clientResource (slumber.Resource):
         retry = 0
 
         while True:
+
             try:
                 return super(clientResource, self)._request(*args, **kwargs)
             except slumber.exceptions.HttpClientError as err:
@@ -58,12 +59,6 @@ class clientResource (slumber.Resource):
                      f'{retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})'
                      )
             time.sleep (retry_in)
-
-    def _process_response (self, resp):
-        if not self._store.get('serialize', True):
-            return resp
-
-        return super (clientResource, self)._process_response(resp)
 
 class clientAPI (slumber.API):
     resource_class = clientResource
