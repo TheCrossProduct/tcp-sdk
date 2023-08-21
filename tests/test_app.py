@@ -386,7 +386,7 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.info.get(Domain="test", App="helloworld")
 
-        assert isinstance (resp, bytes)
+        assert isinstance (resp, str)
 
     def process (self, body):
 
