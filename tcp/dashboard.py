@@ -129,7 +129,7 @@ class TableData:
             else:
                 all_files += self.entries[prefix]
 
-        out = [f'+ {x}' for x in all_files]
+        out = [f'| {x}' for x in all_files]
 
         return out
 
@@ -180,7 +180,10 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
         if stop_updating.is_set ():
            break 
 
-        time.sleep (refresh_delay)
+        if refresh_delay > 0:
+            time.sleep (refresh_delay)
+        else:
+            return 
 
 def update_position (text, model, height, pos_table_screen, pos_cursor_screen, pos_cursor_table, offset):
 
@@ -189,7 +192,7 @@ def update_position (text, model, height, pos_table_screen, pos_cursor_screen, p
     pos_of_plus = []
 
     for ii, line in enumerate(text):
-        if line.startswith('+'):
+        if line.startswith('|'):
             pos_of_plus.append (ii)
 
     if not pos_of_plus:
@@ -259,7 +262,7 @@ def dashboard (client, refresh_delay):
                   stop_updating, 
                   client, 
                   dims[1], 
-                  dims[0]-5))
+                  dims[0]))
 
     th.start ()
 
@@ -287,6 +290,15 @@ def dashboard (client, refresh_delay):
 
                 arg_queue.put({'width':  screen_width, 
                                'height': screen_height})
+
+                # Manually calls update_tables
+                update_tables (0, 
+                               text_queue,
+                               arg_queue,
+                               stop_updating,
+                               client,
+                               screen_width,
+                               screen_height)
 
             stdscr.clear ()
 
