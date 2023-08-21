@@ -465,7 +465,8 @@ class AppTestCase (unittest.TestCase):
 
         assert resp['state'] == 'dead'
 
-        assert 'test/msg-test.txt' in resp['outputs']
+        dest = body['output-prefix']
+        assert f'{dest}/msg-test.txt' in resp['outputs']
 
         resp = self._client.query().app.cost.get (Process=puid)
 
