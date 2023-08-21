@@ -15,6 +15,23 @@ class client (object):
     user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
     def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None):
+        '''
+        OOP to TCP API.
+
+        Args:
+            host (str): uri of TCP SDK as protocol + ip + port + api version (e.g https://api.thecrossproduct.xyz/v1 or http://127.0.0.1:8080/v1) 
+            token (str): connection JWT
+            user_agent (str): Additional info for logging purposes.
+            usermail (str): If no token, then it will connect using credentials.
+            passwd (str)
+
+        Exceptions:
+            tcp.exceptions.InvalidCredentials
+
+        Notes:
+            If neither token nor the pair usermail+passwd are set, then the environment variable TCP_API_TOKEN is tested.
+        '''
+
 
         import os
 
@@ -67,6 +84,9 @@ class client (object):
         return session
 
     def query (self, **kwargs):
+        '''
+        Use this method to perform a query to TCP API.
+        '''
 
         api = clientAPI (self.host,
                          self.host,
@@ -90,6 +110,9 @@ class client (object):
         return api._get_resource(**api._store).get()
 
     def help (self):
+        '''
+        Provides informations about all methods available to you.
+        '''
 
         import textwrap
 
