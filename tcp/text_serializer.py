@@ -11,7 +11,6 @@ class PlainTextSerializer(BaseSerializer):
 
     def loads(self, data):
         decoded = str (data.decode('utf-8'))
-        print (decoded)
         return decoded
 
     def dumps(self, data):

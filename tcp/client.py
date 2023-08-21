@@ -109,10 +109,19 @@ class client (object):
 
         return api._get_resource(**api._store).get()
 
-    def help (self):
+    def help (self, app=None):
         '''
         Provides informations about all methods available to you.
+
+        Args:
+            Domain (str, optional): inquiries help on Application Domain-App
+            App (str, optional)
+
         '''
+
+        if app:
+            print(self.query().app.info.get(Domain=app.split('-')[0].strip(), App='-'.join(app.split('-')[1:]).strip()))
+            return
 
         import textwrap
 
@@ -158,6 +167,18 @@ class client (object):
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
                "dashboard\t- interactive overview of your account ressources")
+
+        print ("\n\nYou have licenses for the following applications:\n")
+
+        apps = self.query().app.get ()
+        list_of_apps = []
+        for x in apps:
+            list_of_apps += [x + '-' + y for y in apps[x]]
+
+        print ('\n'.join([x for x in list_of_apps]))
+        print ('\n')
+        print ('Use this line to query help on a specific application:\n')
+        print (f'client.help(app=\'{list_of_apps[0]}\')')
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None):
         '''

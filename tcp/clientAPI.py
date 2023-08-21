@@ -19,11 +19,7 @@ class clientResource (slumber.Resource):
                 raise exceptions.NoDocumentation(str(err), **err.__dict__) from err
             raise err 
 
-        try:
-            return resp.decode('utf-8')
-        except UnicodeDecodeError as err:
-            raise exceptions.NoDocumentation (f"Unable to decode") from err
-        return ''
+        return resp 
 
     def help (self):
         print (self._get_help())
@@ -59,6 +55,22 @@ class clientResource (slumber.Resource):
                      f'{retry_in} seconds... (retry {retry} on {self.MAX_RETRIES})'
                      )
             time.sleep (retry_in)
+
+    def _try_to_serialize_response(self, resp):
+        s = self._store["serializer"]
+
+        if resp.headers.get("content-type", None):
+            content_type = resp.headers.get('content-type').split(";")[0].strip()
+
+            try:
+                stype = s.get_serializer(content_type=content_type)
+            except exceptions.SerializerNotAvailable:
+                return resp.content
+
+            return stype.loads (resp.content)
+
+        return resp.content
+
 
 class clientAPI (slumber.API):
     resource_class = clientResource
