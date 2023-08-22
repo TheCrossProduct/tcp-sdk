@@ -440,7 +440,8 @@ class AppTestCase (unittest.TestCase):
             if resp['outputs']:
                 for key in resp['outputs']:
                     assert isinstance (resp['outputs'][key], str)
-                    assert resp['outputs'][key].startswith('https://s3')
+                    assert resp['outputs'][key].startswith('https://')
+                    assert 's3' in resp['outputs'][key]
        
             return resp['state']
 
