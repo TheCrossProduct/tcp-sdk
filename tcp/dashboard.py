@@ -185,10 +185,8 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
 
         text_queue.put ( updated_text )
 
-        if stop_updating.is_set ():
+        if stop_updating.wait (refresh_delay):
            break 
-
-        time.sleep (refresh_delay)
 
 def update_position (text, model, height, pos_table_screen, pos_cursor_screen, pos_cursor_table, offset):
 
