@@ -159,6 +159,14 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
     tables = { name: TableFromDB (endpoint, name, ignores[name], sorting_atts[name], width, height) for endpoint, name in models }
     tables['Data'] = TableData (client.query().data)
 
+    if refresh_delay == 0:
+        updated_text = {}
+        for model in tables:
+            tables[model].width, tables[model].height = width, height
+            updated_text[model] = tables[model].load()
+        text_queue.put ( updated_text )
+        return
+
     while True:
 
         if arg_queue.qsize() > 0:
@@ -180,10 +188,7 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
         if stop_updating.is_set ():
            break 
 
-        if refresh_delay > 0:
-            time.sleep (refresh_delay)
-        else:
-            return 
+        time.sleep (refresh_delay)
 
 def update_position (text, model, height, pos_table_screen, pos_cursor_screen, pos_cursor_table, offset):
 
@@ -284,6 +289,7 @@ def dashboard (client, refresh_delay):
             queried_dims = stdscr.getmaxyx()
 
             if queried_dims[0] != dims[0] or queried_dims[1] != dims[1]:
+
                 dims = queried_dims
                 screen_width = dims[1] - offset_screen_x - substract_to_screen_x
                 screen_height = dims[0] - offset_screen_y - substract_to_screen_y
