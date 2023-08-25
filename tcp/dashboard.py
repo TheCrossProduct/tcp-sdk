@@ -104,6 +104,7 @@ class TableData:
 
         self.endpoint = endpoint
         self.model = 'Data'
+        self.entries = None
 
     def load (self):
         from . import exceptions
