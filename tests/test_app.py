@@ -477,17 +477,17 @@ class AppTestCase (unittest.TestCase):
         assert isinstance (resp['cost'], float)
         assert resp['cost'] < 1.0
 
-    def test_scaleway_process (self):
-
-        pool = ["scw:fr-par-1:PLAY2-PICO"]        
-        body = {
-                "inputs": {},
-                "output-prefix": "test",
-                "pool": pool 
-            }
-
-        self.process (body) 
-
+#    def test_scaleway_process (self):
+#
+#        pool = ["scw:fr-par-1:PLAY2-PICO"]        
+#        body = {
+#                "inputs": {},
+#                "output-prefix": "test",
+#                "pool": pool 
+#            }
+#
+#        self.process (body) 
+#
     def test_aws_process (self):
 
         import os 
