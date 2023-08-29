@@ -21,9 +21,12 @@ class LicsTestCase (unittest.TestCase):
 
         resp = self._client.query().lics.get()
 
-        assert isinstance (resp, list)
+        assert isinstance (resp, dict)
+        assert 'licenses' in resp
 
-        for lic in resp:
+        assert isinstance (resp['licenses'], list)
+
+        for lic in resp['licenses']:
             assert isinstance (lic, dict)
 
             for key in lic:

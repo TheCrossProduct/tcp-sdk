@@ -36,9 +36,11 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.list.Process.get() 
 
-        assert isinstance (resp, list)
+        assert isinstance (resp, dict)
+        assert 'processes' in resp
+        assert isinstance (resp['processes'], list)
 
-        for el in resp:
+        for el in resp['processes']:
 
             for key in el:
                 assert key in ['id', 
@@ -72,9 +74,11 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.list.Instance.get() 
 
-        assert isinstance (resp, list)
+        assert isinstance (resp, dict)
+        assert 'instances' in resp
+        assert isinstance (resp['instances'], list)
 
-        for el in resp:
+        for el in resp['instances']:
 
             for key in el:
                 assert key in ['id', 
@@ -128,9 +132,11 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.list.Remote.get() 
 
-        assert isinstance (resp, list)
+        assert isinstance (resp, dict)
+        assert 'remotes' in resp
+        assert isinstance (resp['remotes'], list)
 
-        for el in resp:
+        for el in resp['remotes']:
 
             for key in el:
                 assert key in ['id', 
@@ -173,9 +179,11 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.list.PostMortem.get() 
 
-        assert isinstance (resp, list)
+        assert isinstance (resp, dict)
+        assert 'postmortems' in resp
+        assert isinstance (resp['postmortems'], list)
 
-        for el in resp:
+        for el in resp['postmortems']:
 
             for key in el:
                 assert key in ['id', 
@@ -368,8 +376,11 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.datacenters("scw").get ()
 
-        assert isinstance (resp, list)
-        for el in resp:
+        assert isinstance (resp, dict)
+        assert 'datacenters' in resp
+        assert isinstance (resp['datacenters'], list)
+
+        for el in resp['datacenters']:
             assert isinstance (el, str)
 
         for dc in ["fr-par-1",
@@ -380,7 +391,7 @@ class AppTestCase (unittest.TestCase):
                    "pl-waw-1",
                    "pl-waw-2"]:
 
-            assert dc in resp
+            assert dc in resp['datacenters']
 
     def test_info_get (self):
 
@@ -477,48 +488,48 @@ class AppTestCase (unittest.TestCase):
         assert isinstance (resp['cost'], float)
         assert resp['cost'] < 1.0
 
-#    def test_scaleway_process (self):
-#
-#        pool = ["scw:fr-par-1:PLAY2-PICO"]        
-#        body = {
-#                "inputs": {},
-#                "output-prefix": "test",
-#                "pool": pool 
-#            }
-#
-#        self.process (body) 
-#
-    def test_aws_process (self):
+    def test_scaleway_process (self):
 
-        import os 
-
-        for field in ["AWS_ACCESS_KEY_ID",
-                      "AWS_SECRET_ACCESS_KEY",
-                      "AWS_S3_BUCKET",
-                      "AWS_REGION"]:
-            assert field in os.environ 
-
-        creds = {
-            "aws": {
-                "access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
-                "secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
-                "s3_bucket": os.environ["AWS_S3_BUCKET"],
-                "region": os.environ["AWS_REGION"]
-                }
-            } 
-
-        pool = [
-                "aws:{}:t2.micro".format(os.environ["AWS_REGION"])
-            ] 
-
+        pool = ["scw:fr-par-1:PLAY2-PICO"]        
         body = {
                 "inputs": {},
-                "output-prefix": "s3://test",
-                "pool": pool,
-                "creds": creds
+                "output-prefix": "test",
+                "pool": pool 
             }
 
         self.process (body) 
+
+#    def test_aws_process (self):
+#
+#        import os 
+#
+#        for field in ["AWS_ACCESS_KEY_ID",
+#                      "AWS_SECRET_ACCESS_KEY",
+#                      "AWS_S3_BUCKET",
+#                      "AWS_REGION"]:
+#            assert field in os.environ 
+#
+#        creds = {
+#            "aws": {
+#                "access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+#                "secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+#                "s3_bucket": os.environ["AWS_S3_BUCKET"],
+#                "region": os.environ["AWS_REGION"]
+#                }
+#            } 
+#
+#        pool = [
+#                "aws:{}:t2.micro".format(os.environ["AWS_REGION"])
+#            ] 
+#
+#        body = {
+#                "inputs": {},
+#                "output-prefix": "s3://test",
+#                "pool": pool,
+#                "creds": creds
+#            }
+#
+#        self.process (body) 
 
 if __name__ == '__main__':
     unittest.main()
