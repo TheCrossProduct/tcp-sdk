@@ -1,4 +1,20 @@
--r requirements.txt
-
-pytext
+blinker
+Brotli
+brotlicffi
+certifi
+cffi
+charset-normalizer
+cryptography
+idna
+oauthlib
+prettytable
+pycparser
+PyJWT
+PySocks
+requests
+requests-oauthlib
+slumber
+urllib3
+wcwidth
+pytest
 setuptools
