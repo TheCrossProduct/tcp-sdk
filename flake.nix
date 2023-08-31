@@ -14,6 +14,8 @@
     let
 
       requirements = builtins.readFile ./requirements.txt;
+      requirements-dev = builtins.readFile ./requirements.txt.dev;
+
       version = builtins.substring 0 8 self.lastModifiedDate;
 
       nixpkgs_ = nixpkgs.legacyPackages.${system};
@@ -56,7 +58,7 @@
 
       devShells.default = machnix.lib.${system}.mkPythonShell {
         python="python3Full";
-        requirements = requirements+"\nipython"; 
+        requirements = requirements-dev+"\nipython"; 
         ignoreCollisions=true; 
         packagesExtra = [self.packages.${system}.module];
         providers={notebook="nixpkgs";};
