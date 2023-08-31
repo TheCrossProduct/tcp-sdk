@@ -13,5 +13,6 @@ PyJWT
 PySocks
 requests
 requests-oauthlib
+slumber
 urllib3
 wcwidth
