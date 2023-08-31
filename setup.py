@@ -7,10 +7,10 @@ module_name = "tcp"
 package_name = "tcp-sdk"
 
 deps = [
-    'slumber',
-    'requests',
-    'requests_oauthlib',
-    'prettytable'
+    "slumber",
+    "requests",
+    "requests_oauthlib",
+    "prettytable",
     ]
 
 def read_file (*relative_path_elements):
