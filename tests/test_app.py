@@ -225,6 +225,8 @@ class AppTestCase (unittest.TestCase):
         first = 'test_remote_'+str(uuid.uuid4()).replace ('-','_')
         second = 'test_remote_'+str(uuid.uuid4()).replace ('-','_')
 
+        ids = []
+
         for ii, name in enumerate([first, second]):
 
             body = {
@@ -249,6 +251,8 @@ class AppTestCase (unittest.TestCase):
             assert re.fullmatch ("^remote:"+self._re_uuid4[1:], resp['id'])
             assert isinstance (resp['pub'], str)
             assert re.fullmatch ("^ssh-ed25519 [a-zA-Z0-9\/+]+$", resp['pub'])
+
+            ids.append (resp['id'])
 
         resp = self._client.query().app.remote.get ()
 
@@ -279,8 +283,15 @@ class AppTestCase (unittest.TestCase):
         assert first not in resp
         assert second in resp
 
+        # delete by name
         assert self._client.query().app.remote(first).delete ()
-        assert self._client.query().app.remote(second).delete ()
+        # delete by id
+        assert self._client.query().app.remote(ids[2]).delete ()
+
+        resp = self._client.query().app.remote.get ()
+
+        assert first not in resp
+        assert second not in resp
 
     def check_remote_cp_get_post (self, cloud_providor, creds=None):
 
