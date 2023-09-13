@@ -6,6 +6,7 @@ cffi
 charset-normalizer
 cryptography
 idna
+matplotlib
 oauthlib
 prettytable
 pycparser
@@ -14,5 +15,6 @@ PySocks
 requests
 requests-oauthlib
 slumber
+tk
 urllib3
 wcwidth

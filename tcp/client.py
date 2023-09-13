@@ -166,7 +166,9 @@ class client (object):
                "help\t\t- this message\n"
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
-               "dashboard\t- interactive overview of your account ressources")
+               "dashboard\t- interactive overview of your account ressources\n"
+               "metrics\t- display pcpu and prss for a given proces")
+            
 
         print ("\n\nYou have licenses for the following applications:\n")
 
@@ -316,6 +318,61 @@ class client (object):
                         f.write (chunk)
         except requests.exceptions.HTTPError as err:
             raise exceptions.DownloadException (str(err), err.__dict__)
+
+    def metrics (self, process_id):
+        '''
+        Display metrics about your process. 
+
+        Args:
+            process_id (uuid4): your process id 
+
+        Notes:
+            needs an active graphical session
+        '''
+
+
+        resp = self.query().app.status.get (Process=process_id)
+
+        if 'METRICS' in resp['outputs']:
+
+            import numpy as np
+            import matplotlib
+            matplotlib.use('TkAgg', force=True)
+            import matplotlib.pyplot as plt
+            from datetime import datetime
+
+            ts = {}
+            pcpu = {}
+            prss = {}
+            states = []
+
+            for state in resp['outputs']['METRICS']:
+                states.append (state)
+
+                data = [x for x in resp['outputs']['METRICS'][state].split('|') if x]
+
+                ts[state] = [datetime.fromisoformat(x.split(',')[0].strip()) for x in data]
+                pcpu[state] = [float(x.split(',')[1]) for x in data]
+                prss[state] = [float(x.split(',')[2]) for x in data]
+
+            fig, axs = plt.subplots (len(states), 1)
+
+            for ii,state in enumerate(states): 
+
+                print (ts[state])
+                print (pcpu[state])
+                print (prss[state])
+
+                axs[ii].plot (ts[state], pcpu[state], c="y", label="%cpu")
+                parax = axs[ii].twinx()
+                parax.plot (ts[state], prss[state], c="g", label="%rss")
+                axs[ii].grid(True)
+                axs[ii].set_xlabel(state)
+                axs[ii].set_ylabel('%cpu')
+                parax.set_ylabel('%rss')
+
+            plt.tight_layout ()
+            plt.show ()
 
     def dashboard (self, refresh_delay=5):
         '''
