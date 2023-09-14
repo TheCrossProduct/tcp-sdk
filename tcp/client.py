@@ -167,7 +167,7 @@ class client (object):
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
                "dashboard\t- interactive overview of your account ressources\n"
-               "metrics\t- display pcpu and prss for a given proces")
+               "metrics\t\t- display %cpu and %rss for a given proces")
             
 
         print ("\n\nYou have licenses for the following applications:\n")
