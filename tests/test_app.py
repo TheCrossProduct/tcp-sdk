@@ -286,7 +286,7 @@ class AppTestCase (unittest.TestCase):
         # delete by name
         assert self._client.query().app.remote(first).delete ()
         # delete by id
-        assert self._client.query().app.remote(ids[2]).delete ()
+        assert self._client.query().app.remote(ids[1]).delete ()
 
         resp = self._client.query().app.remote.get ()
 
@@ -461,9 +461,12 @@ class AppTestCase (unittest.TestCase):
 
             if resp['outputs']:
                 for key in resp['outputs']:
-                    assert isinstance (resp['outputs'][key], str)
-                    assert resp['outputs'][key].startswith('https://')
-                    assert 's3' in resp['outputs'][key]
+                    if key == "METRICS":
+                        assert isinstance (resp['outputs'][key], dict)
+                    else:
+                        assert isinstance (resp['outputs'][key], str)
+                        assert resp['outputs'][key].startswith('https://')
+                        assert 's3' in resp['outputs'][key]
        
             return resp['state']
 

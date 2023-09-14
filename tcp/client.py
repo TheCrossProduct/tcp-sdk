@@ -300,6 +300,8 @@ class client (object):
                 - POST generate_presigned_get
         '''
 
+        import slumber
+
         body = {} 
         body['uri'] = src_s3
 
@@ -357,22 +359,26 @@ class client (object):
 
             fig, axs = plt.subplots (len(states), 1)
 
-            for ii,state in enumerate(states): 
+            if len(states) == 1:
+                axs = [axs]
 
-                print (ts[state])
-                print (pcpu[state])
-                print (prss[state])
+            for ii,state in enumerate(states): 
 
                 axs[ii].plot (ts[state], pcpu[state], c="y", label="%cpu")
                 parax = axs[ii].twinx()
                 parax.plot (ts[state], prss[state], c="g", label="%rss")
                 axs[ii].grid(True)
                 axs[ii].set_xlabel(state)
-                axs[ii].set_ylabel('%cpu')
-                parax.set_ylabel('%rss')
+
+                if ii == 0:
+                    axs[ii].legend(bbox_to_anchor=(0., 1.05), loc='lower right')
+                    parax.legend(bbox_to_anchor=(1., 1.05), loc='lower left')
 
             plt.tight_layout ()
             plt.show ()
+
+        else:
+            print ("No metrics available.")
 
     def dashboard (self, refresh_delay=5):
         '''
