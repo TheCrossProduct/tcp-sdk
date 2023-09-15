@@ -51,10 +51,11 @@ def sort_by_att (entries, att):
 
 class TableFromDB:
 
-    def __init__ (self, endpoint, model, ignores, sorting_att, width, height):
+    def __init__ (self, endpoint, model, plural, ignores, sorting_att, width, height):
 
         self.endpoint = endpoint
         self.model = model
+        self.plural = plural
         self.ignores = ignores
         self.sorting_att = sorting_att
         self.width = width
@@ -66,7 +67,7 @@ class TableFromDB:
         from . import exceptions
 
         try:
-            self.entries = self.endpoint.get ()
+            self.entries = self.endpoint.get ()[self.plural]
         except (exceptions.HttpClientError, exceptions.HttpServerError) as err:
             with open (f"log-dashboard.txt", 'a') as f:
                 f.write (f"TableFrom{self.model}: {err.content}")
@@ -139,10 +140,10 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
     import time
     from datetime import datetime
 
-    models = [(client.query().app.list("Process"), "Process"), 
-              (client.query().app.list("Instance"),"Instance"), 
-              (client.query().app.list("Remote"),  "Remote"),
-              (client.query().lics,                "License")]
+    models = [(client.query().app.list("Process"), "Process", "processes"), 
+              (client.query().app.list("Instance"),"Instance", "instances"), 
+              (client.query().app.list("Remote"),  "Remote", "remotes"),
+              (client.query().lics,                "License", "licenses")]
 
     ignores = {'Process':['user_id', 'endpoint', 'terminated', 'expires'],
                'Remote':['user_id', 'usr', 'input_path', 'output_path', 'working_path'],
@@ -157,7 +158,7 @@ def update_tables (refresh_delay, text_queue, arg_queue, stop_updating, client, 
         'License': 'created'
             }
 
-    tables = { name: TableFromDB (endpoint, name, ignores[name], sorting_atts[name], width, height) for endpoint, name in models }
+    tables = { name: TableFromDB (endpoint, name, plural, ignores[name], sorting_atts[name], width, height) for endpoint, name, plural in models }
     tables['Data'] = TableData (client.query().data)
 
     if refresh_delay == 0:
