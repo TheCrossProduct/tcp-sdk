@@ -189,7 +189,7 @@ class client (object):
         Args:
             src_local (str): path to your file on your local computer
             dest_s3 (str): desired path in TCP S3 bucket
-            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "10Gb") 
+            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb") 
 
         Exceptions:
             tcp.exceptions.tcpUploadException
@@ -206,6 +206,8 @@ class client (object):
                 - POST complete_multipart_post
         '''
         import os
+        import slumber
+        from . import exceptions
 
         # Uploading directory
         if os.path.isdir (src_local):
@@ -301,6 +303,7 @@ class client (object):
         '''
 
         import slumber
+        from . import exceptions
 
         body = {} 
         body['uri'] = src_s3
@@ -335,7 +338,7 @@ class client (object):
 
         resp = self.query().app.status.get (Process=process_id)
 
-        if 'METRICS' in resp['outputs']:
+        if 'metrics' in resp:
 
             import numpy as np
             import matplotlib
@@ -348,10 +351,10 @@ class client (object):
             prss = {}
             states = []
 
-            for state in resp['outputs']['METRICS']:
+            for state in resp['metrics']:
                 states.append (state)
 
-                data = [x for x in resp['outputs']['METRICS'][state].split('|') if x]
+                data = [x for x in resp['metrics'][state].split('|') if x]
 
                 ts[state] = [datetime.fromisoformat(x.split(',')[0].strip()) for x in data]
                 pcpu[state] = [float(x.split(',')[1]) for x in data]

@@ -439,8 +439,7 @@ class AppTestCase (unittest.TestCase):
                                'launched',
                                'terminated',
                                'expires',
-                               'state',
-                               'outputs']
+                               'state']
     
             assert isinstance (resp['user_id'], str)
             assert re.fullmatch (self._re_uuid4, resp['user_id'])
@@ -457,9 +456,9 @@ class AppTestCase (unittest.TestCase):
             datetime.datetime.fromisoformat (resp['expires'])
             assert isinstance (resp['state'], str)
             assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
-            assert isinstance (resp['outputs'], dict)
+            if 'outputs' in resp:
+                assert isinstance (resp['outputs'], dict)
 
-            if resp['outputs']:
                 for key in resp['outputs']:
                     if key == "METRICS":
                         assert isinstance (resp['outputs'][key], dict)
