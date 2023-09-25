@@ -343,7 +343,6 @@ class client (object):
             import numpy as np
             import matplotlib
             matplotlib.use('TkAgg', force=True)
-            from matplotlib.gridspec import GridSpec
             import matplotlib.pyplot as plt
             from datetime import datetime, timedelta
             import math
@@ -353,11 +352,11 @@ class client (object):
             prss = {}
             states = []
 
+
             for state in resp['metrics']:
 
                 if filter_state and filter_state not in state:
                     continue
-
 
                 data = resp['metrics'][state]
 
@@ -372,47 +371,38 @@ class client (object):
                 if has_at_least_one_entry:
                     states.append (state)
 
-            xx = 4
-            if len(states) < 4:
-                xx = len(states)%4
-
-            yy = math.floor(len(states)/4)+1
-
-            gs = GridSpec (yy, xx)
+            plt.style.use("dark_background")
             fig = plt.figure ()
+            ax = fig.gca ()
+            parax = ax.twinx()
 
-            axs = []
-
-            for ii in range (len(states)): 
-
-                x = math.floor(ii/4) 
-                y = ii - (x * yy)
-
-                axs.append (fig.add_subplot (gs[x, y]))
+            ax.tick_params (axis='x', labelsize='small', rotation=45)
 
 
-            for ii in range (len(states)): 
+            series = []
+            for state in states:
+                series.append (ts[state])
+                series.append (pcpu[state])
 
-                ax = axs[ii] 
-                state = states[ii]
+            plot_pcpu = ax.plot (*series, c=(0.451,0.749,0.412))
 
-                ax.plot (ts[state], pcpu[state], c="y", label="%cpu")
-                parax = ax.twinx()
-                parax.plot (ts[state], prss[state], c="c", label="%rss")
-                ax.grid(True)
-                ax.set_xlabel(state)
+            series = []
+            for state in states:
+                series.append (ts[state])
+                series.append (prss[state])
 
-                ax.tick_params (axis='x', labelsize='small', rotation=45)
-        
-                if ii == 0:
-                    ax.legend(bbox_to_anchor=(0., 1.05), loc='lower left')
+            plot_prss = parax.plot (*series, c=(0.949,0.800,0.047))
 
-                if len(states) < 4: 
-                    if ii == len(states)-1:
-                        parax.legend(bbox_to_anchor=(1., 1.05), loc='lower left')
-                elif ii == 3:
-                    parax.legend(bbox_to_anchor=(1., 1.05), loc='lower right')
+            leg = ax.legend(plot_pcpu, ["%cpu"], bbox_to_anchor=(0., 1.05), loc='lower left')
+            leg = parax.legend(plot_prss, ["%rss"], bbox_to_anchor=(1., 1.05), loc='lower right')
 
+            max_cpu = max([max(pcpu[state]) for state in states])
+
+            for state in states:
+                ax.text (ts[state][0], max_cpu, state)
+                ax.axvspan (ts[state][0], ts[state][-1], facecolor='0.15')
+
+            fig.tight_layout ()
             plt.show ()
 
         else:
