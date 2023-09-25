@@ -324,7 +324,7 @@ class client (object):
         except requests.exceptions.HTTPError as err:
             raise exceptions.DownloadException (str(err), err.__dict__)
 
-    def metrics (self, process_id):
+    def metrics (self, process_id, state=None):
         '''
         Display metrics about your process. 
 
@@ -344,7 +344,8 @@ class client (object):
             import matplotlib
             matplotlib.use('TkAgg', force=True)
             import matplotlib.pyplot as plt
-            from datetime import datetime
+            from datetime import datetime, timedelta
+            import math
 
             ts = {}
             pcpu = {}
@@ -354,30 +355,55 @@ class client (object):
             for state in resp['metrics']:
                 states.append (state)
 
-                data = [x for x in resp['metrics'][state].split('|') if x]
+                data = resp['metrics'][state]
 
-                ts[state] = [datetime.fromisoformat(x.split(',')[0].strip()) for x in data]
-                pcpu[state] = [float(x.split(',')[1]) for x in data]
-                prss[state] = [float(x.split(',')[2]) for x in data]
+                sampling_rate = data['rate']
+                ts[state] = [datetime.fromisoformat (data['datetime'])] 
+                ts[state] += [ts[state][0] + timedelta(seconds=sampling_rate*(ii+1)) for ii in range(len(data['metrics'])-1)]
+                pcpu[state] = [float(x[0]) for x in data['metrics']]
+                prss[state] = [float(x[1]) for x in data['metrics']]
 
-            fig, axs = plt.subplots (len(states), 1)
+            xx = 4
+            if len(states) < 4:
+                xx = len(states)%4
 
-            if len(states) == 1:
-                axs = [axs]
+            yy = math.floor(len(states)/4)+1
 
-            for ii,state in enumerate(states): 
+            #fig, axs = plt.subplots (yy, xx, squeeze=False)
+            fig = plt.gcf()
+            axs = [plt.subplot(2,4,i+1) for i in range(6)]
+            for ii in range (len(states)): 
 
-                axs[ii].plot (ts[state], pcpu[state], c="y", label="%cpu")
-                parax = axs[ii].twinx()
-                parax.plot (ts[state], prss[state], c="g", label="%rss")
-                axs[ii].grid(True)
-                axs[ii].set_xlabel(state)
+                ax = axs.pop(0)
 
-                if ii == 0:
-                    axs[ii].legend(bbox_to_anchor=(0., 1.05), loc='lower right')
-                    parax.legend(bbox_to_anchor=(1., 1.05), loc='lower left')
+                y = math.floor(ii/4) 
+                x = ii - (y * xx)
 
-            plt.tight_layout ()
+                state = states[ii]
+
+                has_at_least_one_entry = len(pcpu[state]) != 0
+    
+                if has_at_least_one_entry:
+   
+                    ax.plot (ts[state], pcpu[state], c="y", label="%cpu")
+                    parax = ax.twinx()
+                    parax.plot (ts[state], prss[state], c="c", label="%rss")
+                    ax.grid(True)
+                    ax.set_xlabel(state)
+        
+                    if ii == 0:
+                        ax.legend(bbox_to_anchor=(0., 1.05), loc='lower left')
+
+                    if len(states) < 4: 
+                        if ii == len(states)-1:
+                            parax.legend(bbox_to_anchor=(1., 1.05), loc='lower left')
+                    elif ii == 3:
+                        parax.legend(bbox_to_anchor=(1., 1.05), loc='lower right')
+
+            # This does rotate the last subplots but removes everything else...
+#            fig.autofmt_xdate()
+            # This produces plots that are way too small in width...
+#            fig.tight_layout (pad=0.2)
             plt.show ()
 
         else:
