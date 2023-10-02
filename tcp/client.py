@@ -361,10 +361,10 @@ class client (object):
                 data = resp['metrics'][state]
 
                 sampling_rate = data['rate']
+                pcpu[state] = [float(x[0]) for x in data['metrics'] if x]
+                prss[state] = [float(x[1]) for x in data['metrics'] if x]
                 ts[state] = [datetime.fromisoformat (data['datetime'])] 
-                ts[state] += [ts[state][0] + timedelta(seconds=sampling_rate*(ii+1)) for ii in range(len(data['metrics'])-1)]
-                pcpu[state] = [float(x[0]) for x in data['metrics']]
-                prss[state] = [float(x[1]) for x in data['metrics']]
+                ts[state] += [ts[state][0] + timedelta(seconds=sampling_rate*(ii+1)) for ii in range(len(pcpu[state])-1)]
 
                 has_at_least_one_entry = len(pcpu[state]) != 0
 
