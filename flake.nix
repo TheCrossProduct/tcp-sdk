@@ -16,7 +16,7 @@
       requirements = builtins.readFile ./requirements.txt;
       requirements-dev = builtins.readFile ./requirements.txt.dev;
 
-      version = builtins.substring 0 8 self.lastModifiedDate;
+      version = self.lastModifiedDate;
 
       nixpkgs_ = nixpkgs.legacyPackages.${system};
 
