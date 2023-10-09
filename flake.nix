@@ -2,9 +2,9 @@
   description = "TCP python SDK.";
 
   inputs = {
-    utils.url = "github:numtide/flake-utils";
-    machnix.url = "github:DavHau/mach-nix";
-    nixpkgs.follows =   "machnix/nixpkgs";
+     nixpkgs.follows = "machnix/nixpkgs";
+     #machnix.inputs.nixpkgs.follows = "nixpkgs";
+     utils.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, 
