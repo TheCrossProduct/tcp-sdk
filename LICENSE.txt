@@ -1,0 +1,5 @@
+Copyright (C) The Cross Product, Inc - All Rights Reserved.
+Proprietary and confidential.
+Written by Theodore Chabardes <theodore.chabardes@thecrossproduct.com>
+           Elise Vi Nhu Ba <elise.vinhuba@thecrossproduct.com>
+           Since June 2022.
