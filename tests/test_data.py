@@ -9,9 +9,14 @@ class DataTestCase (unittest.TestCase):
 
         import os
 
+        self._test_dir = '.'
+
+        if "TCP_TEST_TOKEN" in os.environ.keys ():
+            self._client = tcp.client (token=os.environ["TCP_TEST_TOKEN"])
+            return
+
         self._test_account = os.environ["TCP_TEST_ACCOUNT"]
         self._test_passwd = os.environ["TCP_TEST_PASSWD"]
-        self._test_dir = '.'
 
         self._client = tcp.client (usermail=self._test_account, passwd= self._test_passwd)
 
@@ -19,14 +24,17 @@ class DataTestCase (unittest.TestCase):
 
         resp = self._client.query().data.get()
 
-        groups = [x['name'] for x in self._client.query().auth.get()['group']]
+        assert 'paging' in resp
+        for field in ['count', 'items_per_page', 'next', 'previous']:
+            assert field in resp['paging']
+        assert isinstance (resp['paging']['count'], int)
+        assert isinstance (resp['paging']['items_per_page'], int)
+        assert isinstance (resp['paging']['next'], str)
+        assert isinstance (resp['paging']['previous'], str)
 
         assert isinstance(resp, dict)
         assert 'files' in resp
         assert isinstance(resp['files'], list)
-        for group in groups:
-            assert group in resp
-            assert isinstance(resp[group], list)
 
     def test_download_upload_delete (self):
 
