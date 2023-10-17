@@ -114,13 +114,33 @@ class client (object):
         Provides informations about all methods available to you.
 
         Args:
-            Domain (str, optional): inquiries help on Application Domain-App
-            App (str, optional)
+            app (str, optional): inquiries help on Application Domain-App
 
         '''
 
         if app:
-            print(self.query().app.info.get(Domain=app.split('-')[0].strip(), App='-'.join(app.split('-')[1:]).strip()))
+            specs = self.query().app.get ()
+
+            app_domain = None
+            app_name = None
+
+            matches = []
+            for domain in specs:
+                if domain in app:
+                    matches.append (domain)
+
+            if matches:
+                matches.sort (key=lambda x: len(x), reverse=True)
+                app_domain = matches[0]
+                app_name = app.replace (f'{app_domain}-', '')
+
+            if not app_domain or not app_name:
+                print (f"{app} not found")
+                return
+
+            print (app_domain, app_name)
+
+            print(self.query().app.info.get(Domain=app_domain, App=app_name))
             return
 
         import textwrap
