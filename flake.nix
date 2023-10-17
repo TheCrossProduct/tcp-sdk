@@ -3,7 +3,6 @@
 
   inputs = {
      nixpkgs.follows = "machnix/nixpkgs";
-     utils.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, 
