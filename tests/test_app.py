@@ -439,7 +439,11 @@ class AppTestCase (unittest.TestCase):
                                'launched',
                                'terminated',
                                'expires',
-                               'state']
+                               'state',
+                               'outputs',
+                               'metrics',
+                               'quote',
+                               'errors']
     
             assert isinstance (resp['user_id'], str)
             assert re.fullmatch (self._re_uuid4, resp['user_id'])
@@ -455,17 +459,37 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (resp['expires'], str)
             datetime.datetime.fromisoformat (resp['expires'])
             assert isinstance (resp['state'], str)
+
             assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
             if 'outputs' in resp:
                 assert isinstance (resp['outputs'], dict)
-
                 for key in resp['outputs']:
-                    if key == "METRICS":
-                        assert isinstance (resp['outputs'][key], dict)
-                    else:
-                        assert isinstance (resp['outputs'][key], str)
-                        assert resp['outputs'][key].startswith('https://')
-                        assert 's3' in resp['outputs'][key]
+                    assert isinstance (resp['outputs'][key], str)
+                    assert resp['outputs'][key].startswith('https://')
+                    assert 's3' in resp['outputs'][key]
+
+            if 'metrics' in resp:
+                for key in resp['metrics']:
+                    assert isinstance (resp['metrics'][key], dict)
+                    for subkey in resp['metrics'][key]:
+                        assert subkey in ['rate', 'datetime', 'metrics']
+                        if subkey == 'rate':
+                            assert isinstance(resp['metrics'][key]['rate'], int)
+                        if subkey == 'datetime':
+                            datetime.datetime.fromisoformat (resp['metrics'][key]['datetime'])
+                        if subkey == 'metrics':
+                            assert isinstance (resp['metrics'][key]['metrics'], list)
+                            for item in resp['metrics'][key]['metrics']:
+                                assert isinstance (item, list)
+                                assert len(item) == 2
+                                assert isinstance (item[0], int) and isinstance (item[1], int)
+            if 'quote' in resp:
+                assert isinstance (resp['quote'], float)
+
+            if 'errors' in resp:
+                assert isinstance (resp['errors'], list)
+                for item in resp['errors']:
+                    assert isinstance (item, str)
        
             return resp['state']
 
