@@ -61,7 +61,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['app'], str)
             assert isinstance (el['domain'], str)
             assert isinstance (el['endpoint'], str)
-            assert el['endpoint'] in ['run', 'quotation']
+            assert el['endpoint'] in ['run', 'test', 'quotation']
             assert isinstance (el['launched'], str)
             datetime.datetime.fromisoformat (el['launched'])
             assert isinstance (el['terminated'], str)
@@ -85,6 +85,7 @@ class AppTestCase (unittest.TestCase):
                                'ext_id', 
                                'user_id', 
                                'process_id',
+                               'pool',
                                'launched',
                                'expires',
                                'state',

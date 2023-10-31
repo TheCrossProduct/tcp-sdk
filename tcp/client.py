@@ -202,7 +202,7 @@ class client (object):
         print ('Use this line to query help on a specific application:\n')
         print (f'client.help(app=\'{list_of_apps[0]}\')')
 
-    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None):
+    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
         '''
         Multipart upload of a file from local repository to S3 repository.
 
@@ -227,6 +227,9 @@ class client (object):
         '''
         import os
         import slumber
+        import time
+        import multiprocessing
+
         from . import exceptions
 
         # Uploading directory
@@ -243,6 +246,8 @@ class client (object):
                                  max_part_size
                                  )
             return
+
+        print (f"Uploading {src_local} to {dest_s3} (max part size: {max_part_size})")
 
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
@@ -265,17 +270,43 @@ class client (object):
 
         has_failed = False
 
-        with open(src_local, 'rb') as f:
-            for part_no,url in enumerate(urls):
-                file_data = f.read(int(part_size))
-           
-                resp=requests.put(url, data=file_data)
+        print (f"  * part_size: {part_size}")
 
-                if resp.status_code != 200:
-                    has_failed = True
-                    break
-                                
-                completed_parts.append({'ETag': resp.headers['ETag'].replace('"',''), 'PartNumber': part_no+1})
+        completed_parts = []
+        todo_parts = [[url, part_no+1] for part_no, url in enumerate(urls)]
+
+        from .upload import _upload_part
+
+        for try_num in range(num_tries): 
+
+            if not todo_parts:
+                break
+
+            if try_num > 0:
+                time.sleep (delay_between_tries)
+
+            print (f"  * Trying {try_num}: {len(todo_parts)} uploads remaining")
+
+            failed_parts = []
+
+            with multiprocessing.Pool () as pool:
+
+                for result in pool.imap_unordered (_upload_part, 
+                                                   ([url, part_no, [src_local, part_size]] for url, part_no in todo_parts)):
+
+                    has_successed, out = result
+
+                    if has_successed:
+                        completed_parts.append (out)
+                    else:
+                        print (f"  * Failed {out}")
+                        failed_parts.append ([out['url'], out['PartNumber']])
+
+            todo_parts = failed_parts
+
+        completed_parts.sort (key=lambda x: x['PartNumber']) 
+
+        has_failed = (len(todo_parts) > 0)
 
         body = {}
 
@@ -283,6 +314,9 @@ class client (object):
         if has_failed:
             body['upload_id'] = uploadId
             body['uri'] = dest_s3
+
+            print (f"  * Aborting {src_local}")
+
             self.query().data.abort_multipart_post.post (body)
 
             number_of_parts_done = len(completed_parts)
