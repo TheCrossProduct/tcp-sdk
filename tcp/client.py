@@ -212,7 +212,7 @@ class client (object):
             max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb") 
 
         Exceptions:
-            tcp.exceptions.tcpUploadException
+            tcp.exceptions.UploadError
 
         Notes:
 
@@ -260,7 +260,7 @@ class client (object):
         try:
             resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            raise exceptions.UploadException (str(err), err.__dict__)
+            raise exceptions.UploadError (str(err), err.__dict__)
 
         #2: File's parts loading
         uploadId=resp["upload_id"]
@@ -332,7 +332,7 @@ class client (object):
         try:
             self.query().data.complete_multipart_post.post(body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            raise exceptions.UploadException (str(err), err.__dict__)
+            raise exceptions.UploadError (str(err), err.__dict__)
 
     def download (self, src_s3, dest_local, chunk_size=8192):
         '''
@@ -344,7 +344,7 @@ class client (object):
             chunk_size (int): desired chunk size for streaming download
 
         Exceptions:
-            tcp.exceptions.tcpDownloadException
+            tcp.exceptions.DownloadError
 
         Notes:
 
@@ -365,7 +365,7 @@ class client (object):
         try:
             resp = self.query ().data.generate_presigned_get.post (body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            raise exceptions.DownloadException (str(err), err.__dict__)
+            raise exceptions.DownloadError (str(err), err.__dict__)
 
         url = resp['url']
 
@@ -376,7 +376,7 @@ class client (object):
                     for chunk in r.iter_content(chunk_size=chunk_size):
                         f.write (chunk)
         except requests.exceptions.HTTPError as err:
-            raise exceptions.DownloadException (str(err), err.__dict__)
+            raise exceptions.DownloadError (str(err), err.__dict__)
 
     def metrics (self, process_id, filter_state=None):
         '''
