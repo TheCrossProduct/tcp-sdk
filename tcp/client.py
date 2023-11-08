@@ -230,8 +230,6 @@ class client (object):
         import time
         import multiprocessing
 
-        from . import exceptions
-
         # Uploading directory
         if os.path.isdir (src_local):
             root_in_s3 = os.path.basename (src_local)
