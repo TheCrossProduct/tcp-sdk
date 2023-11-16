@@ -200,15 +200,24 @@ class client (object):
 
             print ("\n\nYou have licenses for the following applications:\n")
     
-            apps = self.query().app.get ()
+            try:
+                apps = self.query().app.get ()
+            except exceptions.InvalidCredentials as err:
+                apps = []
+                pass
+
             list_of_apps = []
             for x in apps:
                 list_of_apps += [x + '-' + y for y in apps[x]]
 
             print ('\n'.join([x for x in list_of_apps]))
+            if not apps:
+                print ('NO APPLICATION')
             print ('\n')
-            print ('Use this line to query help on a specific application:\n')
-            print (f'client.help(app=\'{list_of_apps[0]}\')')
+
+            if apps: 
+                print ('Use this line to query help on a specific application:\n')
+                print (f'client.help(app=\'{list_of_apps[0]}\')')
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
         '''
