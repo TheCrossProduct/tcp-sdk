@@ -12,7 +12,7 @@ from ._version import __version__
 
 class client (object):
 
-    user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
+    user_agent = 'tcp-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
     def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None):
         '''
@@ -147,11 +147,14 @@ class client (object):
 
         resp = self._get_endpoints ()
 
+        should_print_license = False
+
         lines = []
         for endpoint in resp:
             lines.append ([" OR ".join(endpoint['methods']), 'query()'+endpoint["endpoint"].replace('/', '.')])
 
-        max_first = max([len(x[0]) for x in lines])
+            if 'app' in endpoint["endpoint"]:
+                should_print_license = True
 
         print ("Python SDK to query TCP's API.\n"
                "\n"
@@ -181,6 +184,9 @@ class client (object):
         for line in lines:
             print ('{0:<30}\t{1:<}'.format(line[0], line[1]))
 
+        if not lines:
+            print ("NO ENDPOINT")
+
         print ("\n\nOther methods includes:\n"
                "\n"
                "help\t\t- this message\n"
@@ -190,17 +196,19 @@ class client (object):
                "metrics\t\t- display %cpu and %rss for a given proces")
             
 
-        print ("\n\nYou have licenses for the following applications:\n")
+        if self.token and should_print_license:
 
-        apps = self.query().app.get ()
-        list_of_apps = []
-        for x in apps:
-            list_of_apps += [x + '-' + y for y in apps[x]]
+            print ("\n\nYou have licenses for the following applications:\n")
+    
+            apps = self.query().app.get ()
+            list_of_apps = []
+            for x in apps:
+                list_of_apps += [x + '-' + y for y in apps[x]]
 
-        print ('\n'.join([x for x in list_of_apps]))
-        print ('\n')
-        print ('Use this line to query help on a specific application:\n')
-        print (f'client.help(app=\'{list_of_apps[0]}\')')
+            print ('\n'.join([x for x in list_of_apps]))
+            print ('\n')
+            print ('Use this line to query help on a specific application:\n')
+            print (f'client.help(app=\'{list_of_apps[0]}\')')
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
         '''
