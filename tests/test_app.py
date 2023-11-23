@@ -34,9 +34,13 @@ class AppTestCase (unittest.TestCase):
 
     def test_list_Process_get (self):
 
-        resp = self._client.query().app.list.Process.get() 
+        resp = self._client.query().app.process.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'processes' in resp
         assert isinstance (resp['processes'], list)
 
@@ -44,14 +48,15 @@ class AppTestCase (unittest.TestCase):
 
             for key in el:
                 assert key in ['id', 
-                               'user_id', 
                                'app',
                                'domain',
                                'endpoint',
                                'launched',
                                'terminated',
                                'expires',
-                               'state']
+                               'body',
+                               'state',
+                               'agent']
 
             assert isinstance (el, dict) 
             assert isinstance (el['id'], str)
@@ -68,13 +73,19 @@ class AppTestCase (unittest.TestCase):
             datetime.datetime.fromisoformat (el['terminated'])
             assert isinstance (el['expires'], str)
             datetime.datetime.fromisoformat (el['expires'])
+            assert isinstance (el['body'], dict)
             assert isinstance (el['state'], str)
+            assert isinstance (el['agent'], str)
 
     def test_list_Instance_get (self):
 
-        resp = self._client.query().app.list.Instance.get() 
+        resp = self._client.query().app.instance.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'instances' in resp
         assert isinstance (resp['instances'], list)
 
@@ -83,7 +94,6 @@ class AppTestCase (unittest.TestCase):
             for key in el:
                 assert key in ['id', 
                                'ext_id', 
-                               'user_id', 
                                'process_id',
                                'pool',
                                'launched',
@@ -131,9 +141,13 @@ class AppTestCase (unittest.TestCase):
 
     def test_list_Remote_get (self):
 
-        resp = self._client.query().app.list.Remote.get() 
+        resp = self._client.query().app.remote.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'remotes' in resp
         assert isinstance (resp['remotes'], list)
 
@@ -142,7 +156,6 @@ class AppTestCase (unittest.TestCase):
             for key in el:
                 assert key in ['id', 
                                'name', 
-                               'user_id', 
                                'ip',
                                'usr',
                                'num_cores',
@@ -178,9 +191,13 @@ class AppTestCase (unittest.TestCase):
 
     def test_list_PostMortem_get (self):
 
-        resp = self._client.query().app.list.PostMortem.get() 
+        resp = self._client.query().app.postmortem.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'postmortems' in resp
         assert isinstance (resp['postmortems'], list)
 

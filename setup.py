@@ -63,5 +63,5 @@ setup (
         'console_scripts': ['tcp_dashboard=tcp.__main__:main']
     },
 
-#    test_suite = "tests.get_tests",
+    test_suite = "tests.get_tests",
 )

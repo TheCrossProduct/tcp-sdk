@@ -208,7 +208,7 @@ class client (object):
 
             list_of_apps = []
             for x in apps:
-                list_of_apps += [x + '-' + y for y in apps[x]]
+                list_of_apps += [x + '@' + y for y in apps[x]]
 
             print ('\n'.join([x for x in list_of_apps]))
             if not apps:
