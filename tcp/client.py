@@ -132,7 +132,7 @@ class client (object):
             if matches:
                 matches.sort (key=lambda x: len(x), reverse=True)
                 app_domain = matches[0]
-                app_name = app.replace (f'{app_domain}-', '')
+                app_name = app.replace (f'{app_domain}@', '')
 
             if not app_domain or not app_name:
                 print (f"{app} not found")
@@ -140,7 +140,7 @@ class client (object):
 
             print (app_domain, app_name)
 
-            print(self.query().app.info.get(Domain=app_domain, App=app_name))
+            print(self.query().app(domain)(app).get()
             return
 
         import textwrap
