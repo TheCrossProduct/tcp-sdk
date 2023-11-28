@@ -140,7 +140,7 @@ class client (object):
 
             print (app_domain, app_name)
 
-            print(self.query().app(domain)(app).get()
+            print(self.query().app(domain)(app_name).get()
             return
 
         import textwrap
