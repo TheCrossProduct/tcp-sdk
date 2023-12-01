@@ -192,7 +192,6 @@ class client (object):
                "help\t\t- this message\n"
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
-               "dashboard\t- interactive overview of your account ressources\n"
                "metrics\t\t- display %cpu and %rss for a given proces")
             
 
@@ -273,7 +272,7 @@ class client (object):
             presigned_body.update({"part_size":max_part_size})
         
         try:
-            resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
+            resp=self.query().data.upload.multipart.post(presigned_body)
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
@@ -332,7 +331,7 @@ class client (object):
 
             print (f"  * Aborting {src_local}")
 
-            self.query().data.abort_multipart_post.post (body)
+            self.query().data.upload.multipart.abort.post (body)
 
             number_of_parts_done = len(completed_parts)
             total_number_of_parts = len(urls)
@@ -345,7 +344,7 @@ class client (object):
         body["uri"] = dest_s3
 
         try:
-            self.query().data.complete_multipart_post.post(body)
+            self.query().data.upload.multipart.complete.post(body)
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
@@ -378,7 +377,7 @@ class client (object):
         body['uri'] = src_s3
 
         try:
-            resp = self.query ().data.generate_presigned_get.post (body)
+            resp = self.query ().data.download.post (body)
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.DownloadError (str(err), err.__dict__)
 
@@ -476,15 +475,4 @@ class client (object):
 
         else:
             print ("No metrics available.")
-
-    def dashboard (self, refresh_delay=5):
-        '''
-        Print an overview of all processes.
-
-        Args:
-            refresh_delay (int): refresh every X seconds
-        '''
-
-        from .dashboard import dashboard
-        dashboard (self, refresh_delay)
 
