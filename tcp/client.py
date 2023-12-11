@@ -126,7 +126,7 @@ class client (object):
 
             matches = []
             for domain in specs:
-                if domain in app:
+                if app.startswith(domain):
                     matches.append (domain)
 
             if matches:
