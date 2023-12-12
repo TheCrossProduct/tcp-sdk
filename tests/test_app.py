@@ -73,7 +73,6 @@ class AppTestCase (unittest.TestCase):
             datetime.datetime.fromisoformat (el['expires'])
             assert isinstance (el['body'], dict)
             assert isinstance (el['state'], str)
-            assert isinstance (el['agent'], str)
 
 
     def test_instances_get (self):
@@ -418,7 +417,7 @@ class AppTestCase (unittest.TestCase):
 
     def process (self, body):
 
-        resp = self._client.query().app.test.helloworld.run.post()
+        resp = self._client.query().app.test.helloworld.run.post({"inputs":{}})
 
         assert isinstance (resp, dict)
         assert len(resp) == 1
@@ -429,11 +428,11 @@ class AppTestCase (unittest.TestCase):
         puid = resp['id']
 
         # Should be a process in the process list. We can test it
-        self.test_list_Process_get ()
+        self.test_processes_get ()
 
         def check_status ():
 
-            resp = self._client.query().app.status.get (Process=puid)
+            resp = self._client.query().app.get (Process=puid)
 
             assert isinstance (resp, dict)
             for key in resp:
