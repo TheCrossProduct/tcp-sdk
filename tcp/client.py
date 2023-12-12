@@ -12,7 +12,7 @@ from ._version import __version__
 
 class client (object):
 
-    user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
+    user_agent = 'tcp-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
     def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None):
         '''
@@ -126,13 +126,13 @@ class client (object):
 
             matches = []
             for domain in specs:
-                if domain in app:
+                if app.startswith(domain):
                     matches.append (domain)
 
             if matches:
                 matches.sort (key=lambda x: len(x), reverse=True)
                 app_domain = matches[0]
-                app_name = app.replace (f'{app_domain}-', '')
+                app_name = app.replace (f'{app_domain}@', '')
 
             if not app_domain or not app_name:
                 print (f"{app} not found")
@@ -140,18 +140,21 @@ class client (object):
 
             print (app_domain, app_name)
 
-            print(self.query().app.info.get(Domain=app_domain, App=app_name))
+            print(self.query().app(app_domain)(app_name).get())
             return
 
         import textwrap
 
         resp = self._get_endpoints ()
 
+        should_print_license = False
+
         lines = []
         for endpoint in resp:
             lines.append ([" OR ".join(endpoint['methods']), 'query()'+endpoint["endpoint"].replace('/', '.')])
 
-        max_first = max([len(x[0]) for x in lines])
+            if 'app' in endpoint["endpoint"]:
+                should_print_license = True
 
         print ("Python SDK to query TCP's API.\n"
                "\n"
@@ -181,28 +184,41 @@ class client (object):
         for line in lines:
             print ('{0:<30}\t{1:<}'.format(line[0], line[1]))
 
+        if not lines:
+            print ("NO ENDPOINT")
+
         print ("\n\nOther methods includes:\n"
                "\n"
                "help\t\t- this message\n"
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
-               "dashboard\t- interactive overview of your account ressources\n"
                "metrics\t\t- display %cpu and %rss for a given proces")
             
 
-        print ("\n\nYou have licenses for the following applications:\n")
+        if self.token and should_print_license:
 
-        apps = self.query().app.get ()
-        list_of_apps = []
-        for x in apps:
-            list_of_apps += [x + '-' + y for y in apps[x]]
+            print ("\n\nYou have licenses for the following applications:\n")
+    
+            try:
+                apps = self.query().app.get ()
+            except exceptions.InvalidCredentials as err:
+                apps = []
+                pass
 
-        print ('\n'.join([x for x in list_of_apps]))
-        print ('\n')
-        print ('Use this line to query help on a specific application:\n')
-        print (f'client.help(app=\'{list_of_apps[0]}\')')
+            list_of_apps = []
+            for x in apps:
+                list_of_apps += [x + '@' + y for y in apps[x]]
 
-    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None):
+            print ('\n'.join([x for x in list_of_apps]))
+            if not apps:
+                print ('NO APPLICATION')
+            print ('\n')
+
+            if apps: 
+                print ('Use this line to query help on a specific application:\n')
+                print (f'client.help(app=\'{list_of_apps[0]}\')')
+
+    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
         '''
         Multipart upload of a file from local repository to S3 repository.
 
@@ -212,7 +228,7 @@ class client (object):
             max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb") 
 
         Exceptions:
-            tcp.exceptions.tcpUploadException
+            tcp.exceptions.UploadError
 
         Notes:
 
@@ -227,7 +243,8 @@ class client (object):
         '''
         import os
         import slumber
-        from . import exceptions
+        import time
+        import multiprocessing
 
         # Uploading directory
         if os.path.isdir (src_local):
@@ -236,13 +253,15 @@ class client (object):
             for root, dirs, files in os.walk (src_local):
                 for file in files:
                     self.upload (os.path.join(root,file), 
-                                 os.path.join(
+                                 os.path.normpath(os.path.join(
                                      os.path.join(dest_s3,root_in_s3), 
                                      os.path.join(root[len(src_local):],file)
-                                     ),
+                                     )).replace('\\','/'),
                                  max_part_size
                                  )
             return
+
+        print (f"Uploading {src_local} to {dest_s3} (max part size: {max_part_size})")
 
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
@@ -253,9 +272,9 @@ class client (object):
             presigned_body.update({"part_size":max_part_size})
         
         try:
-            resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
+            resp=self.query().data.upload.multipart.post(presigned_body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            raise exceptions.UploadException (str(err), err.__dict__)
+            raise exceptions.UploadError (str(err), err.__dict__)
 
         #2: File's parts loading
         uploadId=resp["upload_id"]
@@ -265,17 +284,43 @@ class client (object):
 
         has_failed = False
 
-        with open(src_local, 'rb') as f:
-            for part_no,url in enumerate(urls):
-                file_data = f.read(int(part_size))
-           
-                resp=requests.put(url, data=file_data)
+        print (f"  * part_size: {part_size}")
 
-                if resp.status_code != 200:
-                    has_failed = True
-                    break
-                                
-                completed_parts.append({'ETag': resp.headers['ETag'].replace('"',''), 'PartNumber': part_no+1})
+        completed_parts = []
+        todo_parts = [[url, part_no+1] for part_no, url in enumerate(urls)]
+
+        from .upload import _upload_part
+
+        for try_num in range(num_tries): 
+
+            if not todo_parts:
+                break
+
+            if try_num > 0:
+                time.sleep (delay_between_tries)
+
+            print (f"  * Trying {try_num}: {len(todo_parts)} uploads remaining")
+
+            failed_parts = []
+
+            with multiprocessing.Pool () as pool:
+
+                for result in pool.imap_unordered (_upload_part, 
+                                                   ([url, part_no, [src_local, part_size]] for url, part_no in todo_parts)):
+
+                    has_successed, out = result
+
+                    if has_successed:
+                        completed_parts.append (out)
+                    else:
+                        print (f"  * Failed {out}")
+                        failed_parts.append ([out['url'], out['PartNumber']])
+
+            todo_parts = failed_parts
+
+        completed_parts.sort (key=lambda x: x['PartNumber']) 
+
+        has_failed = (len(todo_parts) > 0)
 
         body = {}
 
@@ -283,7 +328,10 @@ class client (object):
         if has_failed:
             body['upload_id'] = uploadId
             body['uri'] = dest_s3
-            self.query().data.abort_multipart_post.post (body)
+
+            print (f"  * Aborting {src_local}")
+
+            self.query().data.upload.multipart.abort.post (body)
 
             number_of_parts_done = len(completed_parts)
             total_number_of_parts = len(urls)
@@ -296,9 +344,9 @@ class client (object):
         body["uri"] = dest_s3
 
         try:
-            self.query().data.complete_multipart_post.post(body)
+            self.query().data.upload.multipart.complete.post(body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            raise exceptions.UploadException (str(err), err.__dict__)
+            raise exceptions.UploadError (str(err), err.__dict__)
 
     def download (self, src_s3, dest_local, chunk_size=8192):
         '''
@@ -310,7 +358,7 @@ class client (object):
             chunk_size (int): desired chunk size for streaming download
 
         Exceptions:
-            tcp.exceptions.tcpDownloadException
+            tcp.exceptions.DownloadError
 
         Notes:
 
@@ -329,9 +377,9 @@ class client (object):
         body['uri'] = src_s3
 
         try:
-            resp = self.query ().data.generate_presigned_get.post (body)
+            resp = self.query ().data.download.post (body)
         except slumber.exceptions.SlumberHttpBaseException as err:
-            raise exceptions.DownloadException (str(err), err.__dict__)
+            raise exceptions.DownloadError (str(err), err.__dict__)
 
         url = resp['url']
 
@@ -342,7 +390,7 @@ class client (object):
                     for chunk in r.iter_content(chunk_size=chunk_size):
                         f.write (chunk)
         except requests.exceptions.HTTPError as err:
-            raise exceptions.DownloadException (str(err), err.__dict__)
+            raise exceptions.DownloadError (str(err), err.__dict__)
 
     def metrics (self, process_id, filter_state=None):
         '''
@@ -427,15 +475,4 @@ class client (object):
 
         else:
             print ("No metrics available.")
-
-    def dashboard (self, refresh_delay=5):
-        '''
-        Print an overview of all processes.
-
-        Args:
-            refresh_delay (int): refresh every X seconds
-        '''
-
-        from .dashboard import dashboard
-        dashboard (self, refresh_delay)
 

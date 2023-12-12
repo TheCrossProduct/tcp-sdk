@@ -13,6 +13,18 @@ deps = [
     "prettytable",
     ]
 
+extra_deps = {
+    'tests': [
+        'coverage',
+        'mock',
+        'pylint'
+        ],
+    'develop': [
+        'setuptools',
+        'wheel'
+        ]
+    }
+
 def read_file (*relative_path_elements):
     file_path = path.join (path.dirname(__file__), *relative_path_elements)
     return io.open(file_path, encoding='utf8').read().strip()
@@ -40,6 +52,8 @@ setup (
     license_files = ("LICENSE.txt"),
 
     install_requires = deps,
+    tests_require = deps + extra_deps["tests"],
+    extra_require = extra_deps,
 
     dependency_links = [],
 

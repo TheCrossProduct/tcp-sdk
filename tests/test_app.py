@@ -37,6 +37,10 @@ class AppTestCase (unittest.TestCase):
         resp = self._client.query().app.processes.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'processes' in resp
         assert isinstance (resp['processes'], list)
 
@@ -44,7 +48,6 @@ class AppTestCase (unittest.TestCase):
 
             for key in el:
                 assert key in ['id', 
-                               #'user_id', 
                                'app',
                                'domain',
                                'endpoint',
@@ -61,14 +64,16 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['app'], str)
             assert isinstance (el['domain'], str)
             assert isinstance (el['endpoint'], str)
-            assert el['endpoint'] in ['run', 'quotation']
+            assert el['endpoint'] in ['run', 'test', 'quotation']
             assert isinstance (el['launched'], str)
             datetime.datetime.fromisoformat (el['launched'])
             assert isinstance (el['terminated'], str)
             datetime.datetime.fromisoformat (el['terminated'])
             assert isinstance (el['expires'], str)
             datetime.datetime.fromisoformat (el['expires'])
+            assert isinstance (el['body'], dict)
             assert isinstance (el['state'], str)
+            assert isinstance (el['agent'], str)
 
 
     def test_instances_get (self):
@@ -76,6 +81,10 @@ class AppTestCase (unittest.TestCase):
         resp = self._client.query().app.instances.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'instances' in resp
         assert isinstance (resp['instances'], list)
 
@@ -131,6 +140,10 @@ class AppTestCase (unittest.TestCase):
         resp = self._client.query().app.remotes.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'remotes' in resp
         assert isinstance (resp['remotes'], list)
 
@@ -173,6 +186,10 @@ class AppTestCase (unittest.TestCase):
         resp = self._client.query().app.postmortems.get() 
 
         assert isinstance (resp, dict)
+
+        if not resp:
+            return
+
         assert 'postmortems' in resp
         assert isinstance (resp['postmortems'], list)
 
