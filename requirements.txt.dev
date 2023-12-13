@@ -19,4 +19,6 @@ tk
 urllib3
 wcwidth
 pytest
+pip
 setuptools
+wheel

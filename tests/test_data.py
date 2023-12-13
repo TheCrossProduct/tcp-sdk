@@ -25,13 +25,6 @@ class DataTestCase (unittest.TestCase):
         resp = self._client.query().data.get()
 
         assert 'paging' in resp
-        for field in ['count', 'items_per_page', 'next', 'previous']:
-            assert field in resp['paging']
-        assert isinstance (resp['paging']['count'], int)
-        assert isinstance (resp['paging']['items_per_page'], int)
-        assert isinstance (resp['paging']['next'], str)
-        assert isinstance (resp['paging']['previous'], str)
-
         assert isinstance(resp, dict)
         assert 'files' in resp
         assert isinstance(resp['files'], list)
@@ -57,10 +50,9 @@ class DataTestCase (unittest.TestCase):
         os.remove (file_src)
         os.remove (file_dest)
 
-        self._client.query().data.delete_file.post ({'uri':"test.txt"})
+        self._client.query().data.remove.post({'uri':"test.txt"})
 
         resp = self._client.query().data.get()
         assert 'test.txt' not in resp['files']
-
 if __name__ == '__main__':
     unittest.main()

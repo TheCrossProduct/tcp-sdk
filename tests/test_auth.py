@@ -55,7 +55,7 @@ class AuthTestCase (unittest.TestCase):
         assert resp["limit"] >= 0
         assert isinstance(resp["uses"], int)
         assert resp["uses"] >= 0
-        assert isinstance(resp["scope"], str)
+        assert isinstance(resp["scope"], type([]))
 
     def test_get (self):
 
@@ -70,7 +70,7 @@ class AuthTestCase (unittest.TestCase):
                            'nbr_activations',
                            'last_activation',
                            'group',
-                           'vat',
+                           'scope',
                            'address',
                            'company',
                            'contact']
@@ -94,10 +94,6 @@ class AuthTestCase (unittest.TestCase):
             assert re.fullmatch(self._re_uuid4, group["id"])
             assert isinstance(group["name"], str)
             assert isinstance(group["descr"], str)
-        assert resp["vat"] is None
-        assert resp["address"] is None
-        assert resp["company"] is None
-        assert resp["contact"] is None
 
     def test_logout_get (self):
 

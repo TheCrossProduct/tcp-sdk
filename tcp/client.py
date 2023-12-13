@@ -12,7 +12,7 @@ from ._version import __version__
 
 class client (object):
 
-    user_agent = 'scw-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
+    user_agent = 'tcp-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
     def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None):
         '''
@@ -126,13 +126,13 @@ class client (object):
 
             matches = []
             for domain in specs:
-                if domain in app:
+                if app.startswith(domain):
                     matches.append (domain)
 
             if matches:
                 matches.sort (key=lambda x: len(x), reverse=True)
                 app_domain = matches[0]
-                app_name = app.replace (f'{app_domain}-', '')
+                app_name = app.replace (f'{app_domain}@', '')
 
             if not app_domain or not app_name:
                 print (f"{app} not found")
@@ -140,18 +140,21 @@ class client (object):
 
             print (app_domain, app_name)
 
-            print(self.query().app.info.get(Domain=app_domain, App=app_name))
+            print(self.query().app(app_domain)(app_name).get())
             return
 
         import textwrap
 
         resp = self._get_endpoints ()
 
+        should_print_license = False
+
         lines = []
         for endpoint in resp:
             lines.append ([" OR ".join(endpoint['methods']), 'query()'+endpoint["endpoint"].replace('/', '.')])
 
-        max_first = max([len(x[0]) for x in lines])
+            if 'app' in endpoint["endpoint"]:
+                should_print_license = True
 
         print ("Python SDK to query TCP's API.\n"
                "\n"
@@ -181,26 +184,39 @@ class client (object):
         for line in lines:
             print ('{0:<30}\t{1:<}'.format(line[0], line[1]))
 
+        if not lines:
+            print ("NO ENDPOINT")
+
         print ("\n\nOther methods includes:\n"
                "\n"
                "help\t\t- this message\n"
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
-               "dashboard\t- interactive overview of your account ressources\n"
                "metrics\t\t- display %cpu and %rss for a given proces")
             
 
-        print ("\n\nYou have licenses for the following applications:\n")
+        if self.token and should_print_license:
 
-        apps = self.query().app.get ()
-        list_of_apps = []
-        for x in apps:
-            list_of_apps += [x + '-' + y for y in apps[x]]
+            print ("\n\nYou have licenses for the following applications:\n")
+    
+            try:
+                apps = self.query().app.get ()
+            except exceptions.InvalidCredentials as err:
+                apps = []
+                pass
 
-        print ('\n'.join([x for x in list_of_apps]))
-        print ('\n')
-        print ('Use this line to query help on a specific application:\n')
-        print (f'client.help(app=\'{list_of_apps[0]}\')')
+            list_of_apps = []
+            for x in apps:
+                list_of_apps += [x + '@' + y for y in apps[x]]
+
+            print ('\n'.join([x for x in list_of_apps]))
+            if not apps:
+                print ('NO APPLICATION')
+            print ('\n')
+
+            if apps: 
+                print ('Use this line to query help on a specific application:\n')
+                print (f'client.help(app=\'{list_of_apps[0]}\')')
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
         '''
@@ -256,7 +272,7 @@ class client (object):
             presigned_body.update({"part_size":max_part_size})
         
         try:
-            resp=self.query().data.generate_presigned_multipart_post.post(presigned_body)
+            resp=self.query().data.upload.multipart.post(presigned_body)
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
@@ -315,7 +331,7 @@ class client (object):
 
             print (f"  * Aborting {src_local}")
 
-            self.query().data.abort_multipart_post.post (body)
+            self.query().data.upload.multipart.abort.post (body)
 
             number_of_parts_done = len(completed_parts)
             total_number_of_parts = len(urls)
@@ -328,7 +344,7 @@ class client (object):
         body["uri"] = dest_s3
 
         try:
-            self.query().data.complete_multipart_post.post(body)
+            self.query().data.upload.multipart.complete.post(body)
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
@@ -361,7 +377,7 @@ class client (object):
         body['uri'] = src_s3
 
         try:
-            resp = self.query ().data.generate_presigned_get.post (body)
+            resp = self.query ().data.download.post (body)
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.DownloadError (str(err), err.__dict__)
 
@@ -459,15 +475,4 @@ class client (object):
 
         else:
             print ("No metrics available.")
-
-    def dashboard (self, refresh_delay=5):
-        '''
-        Print an overview of all processes.
-
-        Args:
-            refresh_delay (int): refresh every X seconds
-        '''
-
-        from .dashboard import dashboard
-        dashboard (self, refresh_delay)
 
