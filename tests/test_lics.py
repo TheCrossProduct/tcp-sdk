@@ -19,7 +19,7 @@ class LicsTestCase (unittest.TestCase):
 
     def test_get (self):
 
-        resp = self._client.query().lics.get()
+        resp = self._client.query().lics.licenses.get()
 
         assert isinstance (resp, dict)
         assert 'licenses' in resp
@@ -32,7 +32,6 @@ class LicsTestCase (unittest.TestCase):
             for key in lic:
                 assert key in ['token',
                                'name',
-                               'user_id',
                                'scope',
                                'created',
                                'until',
@@ -46,9 +45,7 @@ class LicsTestCase (unittest.TestCase):
             assert isinstance (lic['token'], str)
             assert re.fullmatch (self._re_uuid4, lic['token'])
             assert isinstance (lic['name'], str)
-            assert isinstance (lic['user_id'], str)
-            assert re.fullmatch (self._re_uuid4, lic['user_id'])
-            assert isinstance (lic['scope'], str)
+            assert isinstance (lic['scope'],type([]))
             assert isinstance (lic['created'], str)
             datetime.datetime.fromisoformat (lic['created'])
             assert isinstance (lic['until'], str)
