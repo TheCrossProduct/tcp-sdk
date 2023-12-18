@@ -270,7 +270,7 @@ class AppTestCase (unittest.TestCase):
 
     
             for key in remote:
-                assert key in ['id', 'num_cores', 'mem', 'ram', 'instanciated']
+                assert key in ['id', 'name', 'ip', 'usr', 'input_path', 'working_path', 'output_path', 'num_cores', 'mem', 'ram', 'instanciated']
     
             assert isinstance (remote['id'], str)
             assert re.fullmatch("^remote:"+self._re_uuid4[1:], remote['id'])
@@ -283,7 +283,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (remote['instanciated'], bool)
             assert not remote['instanciated']
 
-        resp = self._client.query().app.remote.post({"cores":2})
+        resp = self._client.query().app.remotes.post({"num_cores":2})
 
         assert first not in resp
         assert second in resp
@@ -301,9 +301,9 @@ class AppTestCase (unittest.TestCase):
     def check_remote_cp_get_post (self, cloud_providor, creds=None):
 
         if not creds:
-            resp = self._client.query().app.remote(cloud_providor).get ()
+            resp = self._client.query().app.remotes(cloud_providor).get ()
         else:
-            resp = self._client.query().app.remote(cloud_providor).post (creds)
+            resp = self._client.query().app.remotes(cloud_providor).post (creds)
 
         assert isinstance(resp, dict)
 
@@ -432,12 +432,13 @@ class AppTestCase (unittest.TestCase):
 
         def check_status ():
 
-            resp = self._client.query().app.get (Process=puid)
+            resp = self._client.query().app.process(puid).get ()
 
             assert isinstance (resp, dict)
             for key in resp:
-                assert key in ['user_id',
-                               'app',
+                assert key in ['app',
+                               'body',
+                               'agent',
                                'domain',
                                'endpoint',
                                'id',
@@ -450,8 +451,6 @@ class AppTestCase (unittest.TestCase):
                                'quote',
                                'errors']
     
-            assert isinstance (resp['user_id'], str)
-            assert re.fullmatch (self._re_uuid4, resp['user_id'])
             assert resp['app'] == 'helloworld'
             assert resp['domain'] == 'test'
             assert resp['endpoint'] == 'run'
@@ -464,6 +463,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (resp['expires'], str)
             datetime.datetime.fromisoformat (resp['expires'])
             assert isinstance (resp['state'], str)
+            assert isinstance (resp['agent'], str)
 
             assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
             if 'outputs' in resp:
@@ -515,7 +515,7 @@ class AppTestCase (unittest.TestCase):
 
             status = check_status ()
 
-        resp = self._client.query().app.status.get (Process=puid)
+        resp = self._client.query().app.process(puid).get ()
 
         assert resp['state'] == 'dead'
 
