@@ -348,7 +348,7 @@ class client (object):
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
-    def download (self, src_s3, dest_local, chunk_size=8192):
+    def download (self, src_s3, dest_local, chunk_size=8192, num_tries:int=3, delay_between_tries:float=1.):
         '''
         Download of a file from local repository to S3 repository.
 
@@ -372,6 +372,7 @@ class client (object):
 
         import slumber
         from . import exceptions
+        import time
 
         body = {} 
         body['uri'] = src_s3
@@ -383,14 +384,23 @@ class client (object):
 
         url = resp['url']
 
-        try: 
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status ()
-                with open (dest_local, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=chunk_size):
-                        f.write (chunk)
-        except requests.exceptions.HTTPError as err:
-            raise exceptions.DownloadError (str(err), err.__dict__)
+        for try_num in range(num_tries): 
+
+            if try_num > 0:
+                time.sleep (delay_between_tries)
+
+            try: 
+                with requests.get(url, stream=True) as r:
+                    r.raise_for_status ()
+                    with open (dest_local, 'wb') as f:
+                        for chunk in r.iter_content(chunk_size=chunk_size):
+                            f.write (chunk)
+                    return
+
+            except requests.exceptions.HTTPError as err:
+                raise exceptions.DownloadError (str(err), err.__dict__)
+
+        raise exceptions.DownloadError (str(err), err.__dict__)
 
     def metrics (self, process_id, filter_state=None):
         '''
