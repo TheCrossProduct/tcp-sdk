@@ -244,8 +244,8 @@ class client (object):
            files = gdown.download_folder (url=src_gdrive, output=fp.name)
 
            for file in files:
-               filename = os.path.basename(file)
-               self.upload (file, os.path.join(dest_s3,filename), max_part_size, num_tries, delay_between_tries)
+               rel_path = file[len(fp.name)+1:] 
+               self.upload (file, os.path.join(dest_s3, rel_path), max_part_size, num_tries, delay_between_tries)
         else:
             file = gdown.download (url=src_gdrive, output=fp.name)
             filename = os.path.basename(file)
