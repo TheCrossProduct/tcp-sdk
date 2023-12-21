@@ -241,7 +241,7 @@ class client (object):
         fp = tempfile.TemporaryDirectory ()
 
         if is_folder:
-           files = gdown.download_folder (url=src_gdrive, output=fp.name)
+           files = gdown.download_folder (url=src_gdrive, output=fp.name, remaining_ok=True)
 
            for file in files:
                rel_path = file[len(fp.name)+1:] 
