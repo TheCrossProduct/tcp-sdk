@@ -235,17 +235,20 @@ class client (object):
         import gdown
         import tempfile
         import os
+        import pathlib  
 
         is_folder = "folders" == src_gdrive.split("/")[4]
         
         fp = tempfile.TemporaryDirectory ()
 
         if is_folder:
-           files = gdown.download_folder (url=src_gdrive, output=fp.name, remaining_ok=True)
+            gdown.download_folder (url=src_gdrive, output=fp.name, remaining_ok=True)
 
-           for file in files:
-               rel_path = file[len(fp.name)+1:] 
-               self.upload (file, os.path.join(dest_s3, rel_path), max_part_size, num_tries, delay_between_tries)
+            files = [str(x) for x in list (pathlib.Path(fp.name).iterdir())] 
+
+            for file in files:
+                rel_path = file[len(fp.name)+1:] 
+                self.upload (file, os.path.join(dest_s3, rel_path), max_part_size, num_tries, delay_between_tries)
         else:
             file = gdown.download (url=src_gdrive, output=fp.name)
             filename = os.path.basename(file)
