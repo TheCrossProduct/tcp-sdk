@@ -13,7 +13,11 @@ def _upload_part (args):
         f.seek ((part_no-1)*part_size)
         file_data = f.read (part_size)
 
-    resp = requests.put (url, data=file_data)
+    try :
+        resp = requests.put (url, data=file_data)
+    except requests.exceptions.SSLError as e:
+        return False,{'url': url, 'PartNumber': part_no}
+
 
     if resp.status_code != 200:
         return False, {'url': url, 'PartNumber': part_no} 
