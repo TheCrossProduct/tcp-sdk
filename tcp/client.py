@@ -192,7 +192,9 @@ class client (object):
                "help\t\t- this message\n"
                "download\t- from TCP S3 storage to your local storage\n"
                "upload\t\t- from your local storage to TCP S3 storage\n"
-               "metrics\t\t- display %cpu and %rss for a given proces")
+               "upload_gdrive\t - from your google drive to TCP S3 storage\n"
+#               "metrics\t\t- display %cpu and %rss for a given proces"
+               )
             
 
         if self.token and should_print_license:
@@ -217,6 +219,42 @@ class client (object):
             if apps: 
                 print ('Use this line to query help on a specific application:\n')
                 print (f'client.help(app=\'{list_of_apps[0]}\')')
+
+    def upload_gdrive (self, src_gdrive:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
+        '''
+        Multipart upload of a file from Google drive to S3 repository.
+
+        Args:
+            src_gdrive (str): URL of the Google Drive folder or file. It must be shared as 'Anyone with the link'.
+            dest_s3 (str): desired path in TCP S3 bucket
+            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb") 
+ 
+        Exceptions:
+            tcp.exceptions.UploadError
+        '''
+        import gdown
+        import tempfile
+        import os
+        import pathlib  
+
+        is_folder = "folders" == src_gdrive.split("/")[4]
+        
+        fp = tempfile.TemporaryDirectory ()
+
+        if is_folder:
+            gdown.download_folder (url=src_gdrive, output=fp.name, remaining_ok=True)
+
+            files = [str(x) for x in list (pathlib.Path(fp.name).iterdir())] 
+
+            for file in files:
+                rel_path = file[len(fp.name)+1:] 
+                self.upload (file, os.path.join(dest_s3, rel_path), max_part_size, num_tries, delay_between_tries)
+        else:
+            file = gdown.download (url=src_gdrive, output=fp.name)
+            filename = os.path.basename(file)
+            self.upload (file, os.path.join(dest_s3,filename), max_part_size, num_tries, delay_between_tries)
+
+        fp.cleanup()
 
     def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
         '''
@@ -348,7 +386,7 @@ class client (object):
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
-    def download (self, src_s3, dest_local, chunk_size=8192):
+    def download (self, src_s3, dest_local, chunk_size=8192, num_tries:int=3, delay_between_tries:float=1.):
         '''
         Download of a file from local repository to S3 repository.
 
@@ -372,6 +410,7 @@ class client (object):
 
         import slumber
         from . import exceptions
+        import time
 
         body = {} 
         body['uri'] = src_s3
@@ -383,14 +422,23 @@ class client (object):
 
         url = resp['url']
 
-        try: 
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status ()
-                with open (dest_local, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=chunk_size):
-                        f.write (chunk)
-        except requests.exceptions.HTTPError as err:
-            raise exceptions.DownloadError (str(err), err.__dict__)
+        for try_num in range(num_tries): 
+
+            if try_num > 0:
+                time.sleep (delay_between_tries)
+
+            try: 
+                with requests.get(url, stream=True) as r:
+                    r.raise_for_status ()
+                    with open (dest_local, 'wb') as f:
+                        for chunk in r.iter_content(chunk_size=chunk_size):
+                            f.write (chunk)
+                    return
+
+            except requests.exceptions.HTTPError as err:
+                raise exceptions.DownloadError (str(err), err.__dict__)
+
+        raise exceptions.DownloadError (str(err), err.__dict__)
 
     def metrics (self, process_id, filter_state=None):
         '''

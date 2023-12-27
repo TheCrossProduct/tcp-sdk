@@ -11,6 +11,7 @@ deps = [
     "requests",
     "requests_oauthlib",
     "prettytable",
+    "gdown"
     ]
 
 extra_deps = {

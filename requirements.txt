@@ -5,6 +5,7 @@ certifi
 cffi
 charset-normalizer
 cryptography
+gdown
 idna
 matplotlib
 oauthlib
