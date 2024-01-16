@@ -1,6 +1,7 @@
 blinker
 Brotli
 brotlicffi
+click
 certifi
 cffi
 charset-normalizer

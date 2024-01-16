@@ -286,15 +286,15 @@ class client (object):
 
         # Uploading directory
         if os.path.isdir (src_local):
-            root_in_s3 = os.path.basename (src_local)
+            root_in_s3 = os.path.basename (os.path.normpath(src_local))
 
             for root, dirs, files in os.walk (src_local):
                 for file in files:
-                    self.upload (os.path.join(root,file), 
-                                 os.path.normpath(os.path.join(
-                                     os.path.join(dest_s3,root_in_s3), 
-                                     os.path.join(root[len(src_local):],file)
-                                     )).replace('\\','/'),
+                    self.upload (os.path.normpath(os.path.join(root,file)), 
+                                 os.path.join(
+                                     os.path.join(os.path.normpath(dest_s3),root_in_s3), 
+                                     os.path.normpath(os.path.join(os.path.normpath(root[len(src_local):]),file))
+                                     ).replace('\\','/'),
                                  max_part_size
                                  )
             return
