@@ -256,7 +256,7 @@ class client (object):
 
         fp.cleanup()
 
-    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1.):
+    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1., verbose:bool=False):
         '''
         Multipart upload of a file from local repository to S3 repository.
 
@@ -283,6 +283,7 @@ class client (object):
         import slumber
         import time
         import multiprocessing
+        from sys import stderr
 
         # Uploading directory
         if os.path.isdir (src_local):
@@ -299,7 +300,8 @@ class client (object):
                                  )
             return
 
-        print (f"Uploading {src_local} to {dest_s3} (max part size: {max_part_size})")
+        if verbose:
+            stderr.write (f"Uploading {src_local} to {dest_s3} (max part size: {max_part_size})")
 
         #TODO adding multithread and retry process when error
         #1: S3 target space definition
@@ -322,7 +324,8 @@ class client (object):
 
         has_failed = False
 
-        print (f"  * part_size: {part_size}")
+        if verbose:
+            stderr.write (f"  * part_size: {part_size}")
 
         completed_parts = []
         todo_parts = [[url, part_no+1] for part_no, url in enumerate(urls)]
@@ -337,7 +340,8 @@ class client (object):
             if try_num > 0:
                 time.sleep (delay_between_tries)
 
-            print (f"  * Trying {try_num}: {len(todo_parts)} uploads remaining")
+            if verbose:
+                stderr.write (f"  * Trying {try_num}: {len(todo_parts)} uploads remaining")
 
             failed_parts = []
 
@@ -351,7 +355,8 @@ class client (object):
                     if has_successed:
                         completed_parts.append (out)
                     else:
-                        print (f"  * Failed {out}")
+                        if verbose:
+                            stderr.write (f"  * Failed {out}")
                         failed_parts.append ([out['url'], out['PartNumber']])
 
             todo_parts = failed_parts
@@ -367,7 +372,7 @@ class client (object):
             body['upload_id'] = uploadId
             body['uri'] = dest_s3
 
-            print (f"  * Aborting {src_local}")
+            stderr.write (f"  * Aborting {src_local}")
 
             self.query().data.upload.multipart.abort.post (body)
 
@@ -386,7 +391,7 @@ class client (object):
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
-    def download (self, src_s3, dest_local, chunk_size=8192, num_tries:int=3, delay_between_tries:float=1.):
+    def download (self, src_s3, dest_local, chunk_size=8192, num_tries:int=3, delay_between_tries:float=1., verbose:bool=False):
         '''
         Download of a file from local repository to S3 repository.
 
@@ -425,6 +430,8 @@ class client (object):
         for try_num in range(num_tries): 
 
             if try_num > 0:
+                if verbose:
+                    print (f"download {dest_local}: trying again ({try_num+1}/{num_tries})")
                 time.sleep (delay_between_tries)
 
             try: 
