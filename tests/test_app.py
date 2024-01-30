@@ -56,7 +56,10 @@ class AppTestCase (unittest.TestCase):
                                'expires',
                                'body',
                                'state',
-                               'agent']
+                               'quote',
+                               'errors',
+                               'agent',
+                               'tags']
 
             assert isinstance (el, dict) 
             assert isinstance (el['id'], str)
@@ -437,19 +440,20 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (resp, dict)
             for key in resp:
                 assert key in ['app',
-                               'body',
-                               'agent',
                                'domain',
                                'endpoint',
                                'id',
                                'launched',
                                'terminated',
                                'expires',
+                               'body',
                                'state',
                                'outputs',
                                'metrics',
                                'quote',
-                               'errors']
+                               'agent',
+                               'errors',
+                               'tags']
     
             assert resp['app'] == 'helloworld'
             assert resp['domain'] == 'test'
@@ -492,9 +496,7 @@ class AppTestCase (unittest.TestCase):
                 assert isinstance (resp['quote'], float)
 
             if 'errors' in resp:
-                assert isinstance (resp['errors'], list)
-                for item in resp['errors']:
-                    assert isinstance (item, str)
+                assert isinstance (resp['errors'], str)
        
             return resp['state']
 

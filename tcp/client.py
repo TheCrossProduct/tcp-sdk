@@ -416,6 +416,8 @@ class client (object):
         import slumber
         from . import exceptions
         import time
+        import sys
+        import shutil
 
         body = {} 
         body['uri'] = src_s3
@@ -431,16 +433,15 @@ class client (object):
 
             if try_num > 0:
                 if verbose:
-                    print (f"download {dest_local}: trying again ({try_num+1}/{num_tries})")
+                    sys.stderr.write (f"download {dest_local}: trying again ({try_num+1}/{num_tries})")
                 time.sleep (delay_between_tries)
 
             try: 
                 with requests.get(url, stream=True) as r:
                     r.raise_for_status ()
                     with open (dest_local, 'wb') as f:
-                        for chunk in r.iter_content(chunk_size=chunk_size):
-                            f.write (chunk)
-                    return
+                        shutil.copyfileobj(r.raw, f)
+                return
 
             except requests.exceptions.HTTPError as err:
                 raise exceptions.DownloadError (str(err), err.__dict__)
