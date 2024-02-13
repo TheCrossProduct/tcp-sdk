@@ -389,7 +389,7 @@ class client (object):
 
         if compute_md5sum:
             hash_md5 = hashlib.md5()
-            with open(dest_local, "rb") as f:
+            with open(src_local, "rb") as f:
                 for chunk in iter(lambda: f.read(chunk_size), b""):
                     hash_md5.update(chunk)
             body["md5sum"] = hash_md5.hexdigest()
