@@ -36,10 +36,10 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.processes.get() 
 
-        assert isinstance (resp, dict)
-
         if not resp:
             return
+
+        assert isinstance (resp, dict)
 
         assert 'processes' in resp
         assert isinstance (resp['processes'], list)
@@ -82,10 +82,10 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.instances.get() 
 
-        assert isinstance (resp, dict)
-
         if not resp:
             return
+
+        assert isinstance (resp, dict)
 
         assert 'instances' in resp
         assert isinstance (resp['instances'], list)
@@ -141,10 +141,10 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.remotes.get() 
 
-        assert isinstance (resp, dict)
-
         if not resp:
             return
+
+        assert isinstance (resp, dict)
 
         assert 'remotes' in resp
         assert isinstance (resp['remotes'], list)
@@ -187,10 +187,10 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.postmortems.get() 
 
-        assert isinstance (resp, dict)
-
         if not resp:
             return
+
+        assert isinstance (resp, dict)
 
         assert 'postmortems' in resp
         assert isinstance (resp['postmortems'], list)
@@ -270,7 +270,6 @@ class AppTestCase (unittest.TestCase):
             resp = self._client.query().app.remote(remote_id).get()
             print("resp:", resp)
             remote = resp
-
     
             for key in remote:
                 assert key in ['id', 'name', 'ip', 'usr', 'input_path', 'working_path', 'output_path', 'num_cores', 'mem', 'ram', 'instanciated']
@@ -286,7 +285,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (remote['instanciated'], bool)
             assert not remote['instanciated']
 
-        resp = self._client.query().app.remotes.post({"num_cores":2})
+        resp = self._client.query().app.remotes.post({"num_cores":2})['remotes']
 
         assert first not in resp
         assert second in resp
@@ -296,7 +295,7 @@ class AppTestCase (unittest.TestCase):
         # delete by id
         assert self._client.query().app.remote(ids[1]).delete ()
 
-        resp = self._client.query().app.remote.get ()
+        resp = self._client.query().app.remotes.get ()['remotes']
 
         assert first not in resp
         assert second not in resp
@@ -470,12 +469,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (resp['agent'], str)
 
             assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
-            if 'outputs' in resp:
-                assert isinstance (resp['outputs'], dict)
-                for key in resp['outputs']:
-                    assert isinstance (resp['outputs'][key], str)
-                    assert resp['outputs'][key].startswith('https://')
-                    assert 's3' in resp['outputs'][key]
+
 
             if 'metrics' in resp:
                 for key in resp['metrics']:
@@ -492,6 +486,7 @@ class AppTestCase (unittest.TestCase):
                                 assert isinstance (item, list)
                                 assert len(item) == 2
                                 assert isinstance (item[0], int) and isinstance (item[1], int)
+
             if 'quote' in resp:
                 assert isinstance (resp['quote'], float)
 
@@ -499,6 +494,27 @@ class AppTestCase (unittest.TestCase):
                 assert isinstance (resp['errors'], str)
        
             return resp['state']
+
+        def check_outputs ():
+ 
+            resp = self._client.query().app.process.outputs(puid).get ()
+            time.sleep(1)
+            resp = self._client.query().app.process.outputs(puid).get ()
+
+            assert isinstance (resp, dict)
+            for key in resp:
+                assert key in ['paging',
+                               'outputs']
+
+            if 'outputs' in resp:
+                assert isinstance (resp['outputs'], list)
+                for oo in resp['outputs']:
+                    assert "key" in oo
+                    assert "url" in oo
+                    assert isinstance (oo["key"], str)
+                    assert isinstance (oo["url"], str)
+                    assert oo["url"].startswith('https://')
+                    assert 's3' in oo["url"]
 
         import time
 
@@ -521,8 +537,7 @@ class AppTestCase (unittest.TestCase):
 
         assert resp['state'] == 'dead'
 
-        dest = body['output-prefix']
-        assert f'{dest}/msg-test.txt' in resp['outputs']
+        check_outputs ()        
 
         resp = self._client.query().app.cost.get (Process=puid)
 
