@@ -54,5 +54,6 @@ class DataTestCase (unittest.TestCase):
 
         resp = self._client.query().data.get()
         assert 'test.txt' not in resp['files']
+
 if __name__ == '__main__':
     unittest.main()
