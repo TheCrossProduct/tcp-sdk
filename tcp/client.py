@@ -256,7 +256,7 @@ class client (object):
 
         fp.cleanup()
 
-    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1., verbose:bool=False, compute_md5sum:bool=True):
+    def upload (self, src_local:str, dest_s3:str, max_part_size:str=None, num_tries:int=3, delay_between_tries:float=1., verbose:bool=False, compute_md5sum:bool=True, md5sum_chunk_size=8192):
         '''
         Multipart upload of a file from local repository to S3 repository.
 
@@ -390,7 +390,7 @@ class client (object):
         if compute_md5sum:
             hash_md5 = hashlib.md5()
             with open(src_local, "rb") as f:
-                for chunk in iter(lambda: f.read(chunk_size), b""):
+                for chunk in iter(lambda: f.read(md5sum_chunk_size), b""):
                     hash_md5.update(chunk)
             body["md5sum"] = hash_md5.hexdigest()
 
@@ -399,7 +399,7 @@ class client (object):
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.UploadError (str(err), err.__dict__)
 
-    def download (self, src_s3, dest_local, chunk_size=8192, num_tries:int=3, delay_between_tries:float=1., verbose:bool=False):
+    def download (self, src_s3, dest_local, chunk_size=8192, num_tries:int=3, delay_between_tries:float=1., verbose:bool=False, md5sum_chunk_size=8192):
         '''
         Download of a file from local repository to S3 repository.
 
@@ -458,7 +458,7 @@ class client (object):
         if "md5sum" in resp:
             hash_md5 = hashlib.md5()
             with open(dest_local, "rb") as f:
-                for chunk in iter(lambda: f.read(chunk_size), b""):
+                for chunk in iter(lambda: f.read(md5sum_chunk_size), b""):
                     hash_md5.update(chunk)
             if hash_md5.hexdigest() != resp["md5sum"]:
                 raise exceptions.DownloadError ("md5sums do not match")
