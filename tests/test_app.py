@@ -21,6 +21,7 @@ class AppTestCase (unittest.TestCase):
         self._re_mem = "^[1-9][0-9]{0,32}(|.[0-9]+)(|b|Kb|Mb|Gb|Tb|Pb)$"
         self._re_remote_cp = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
         self._re_remote_id = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
+        self._re_instance_id = "^[0-9]+\-[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
 
     def test_get (self):
         resp = self._client.query().app.get()
@@ -34,7 +35,7 @@ class AppTestCase (unittest.TestCase):
 
     def test_processes_get (self):
 
-        resp = self._client.query().app.processes.get() 
+        resp = self._client.query().app.processes.get()
 
         if not resp:
             return
@@ -47,7 +48,7 @@ class AppTestCase (unittest.TestCase):
         for el in resp['processes']:
 
             for key in el:
-                assert key in ['id', 
+                assert key in ['id',
                                'app',
                                'domain',
                                'endpoint',
@@ -61,7 +62,7 @@ class AppTestCase (unittest.TestCase):
                                'agent',
                                'tags']
 
-            assert isinstance (el, dict) 
+            assert isinstance (el, dict)
             assert isinstance (el['id'], str)
             assert re.fullmatch (self._re_uuid4, el['id'])
             assert isinstance (el['app'], str)
@@ -80,7 +81,7 @@ class AppTestCase (unittest.TestCase):
 
     def test_instances_get (self):
 
-        resp = self._client.query().app.instances.get() 
+        resp = self._client.query().app.instances.get()
 
         if not resp:
             return
@@ -93,8 +94,8 @@ class AppTestCase (unittest.TestCase):
         for el in resp['instances']:
 
             for key in el:
-                assert key in ['id', 
-                               'ext_id', 
+                assert key in ['id',
+                               'ext_id',
                                'process_id',
                                'pool',
                                'launched',
@@ -109,9 +110,9 @@ class AppTestCase (unittest.TestCase):
                                'mem_required',
                                'ram_required']
 
-            assert isinstance (el, dict) 
+            assert isinstance (el, dict)
             assert isinstance (el['id'], str)
-            assert re.fullmatch (self._re_uuid4, el['id'])
+            assert re.fullmatch (self._re_instance_id, el['id'])
             assert isinstance (el['ext_id'], str)
             assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id']) or not el['ext_id'])
             assert isinstance (el['process_id'], str)
@@ -122,7 +123,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['expires'], str)
             datetime.datetime.fromisoformat (el['expires'])
             assert isinstance (el['state'], str)
-            assert isinstance (el['ip'], str) 
+            assert isinstance (el['ip'], str)
             assert re.fullmatch (self._re_ip, el['ip']) or not el['ip']
             assert isinstance (el['ssh_usr'], str)
             assert re.fullmatch (self._re_usr, el['ssh_usr']) or not el['ssh_usr']
@@ -139,7 +140,7 @@ class AppTestCase (unittest.TestCase):
 
     def test_remotes_get (self):
 
-        resp = self._client.query().app.remotes.get() 
+        resp = self._client.query().app.remotes.get()
 
         if not resp:
             return
@@ -152,8 +153,8 @@ class AppTestCase (unittest.TestCase):
         for el in resp['remotes']:
 
             for key in el:
-                assert key in ['id', 
-                               'name', 
+                assert key in ['id',
+                               'name',
                                'ip',
                                'usr',
                                'num_cores',
@@ -164,10 +165,10 @@ class AppTestCase (unittest.TestCase):
                                'output_path',
                                'instanciated']
 
-            assert isinstance (el, dict) 
+            assert isinstance (el, dict)
             assert isinstance (el['id'], str)
             assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['id']) or re.fullmatch(self._re_remote_id, el['id']))
-            assert isinstance (el['ip'], str) 
+            assert isinstance (el['ip'], str)
             assert re.fullmatch (self._re_ip, el['ip'])
             assert isinstance (el['usr'], str)
             assert re.fullmatch (self._re_usr, el['usr'])
@@ -185,7 +186,7 @@ class AppTestCase (unittest.TestCase):
 
     def test_postmortems_get (self):
 
-        resp = self._client.query().app.postmortems.get() 
+        resp = self._client.query().app.postmortems.get()
 
         if not resp:
             return
@@ -198,8 +199,8 @@ class AppTestCase (unittest.TestCase):
         for el in resp['postmortems']:
 
             for key in el:
-                assert key in ['id', 
-                               'ext_id', 
+                assert key in ['id',
+                               'ext_id',
                                'process_id',
                                'launched',
                                'terminated',
@@ -208,7 +209,7 @@ class AppTestCase (unittest.TestCase):
                                'mem',
                                'ram']
 
-            assert isinstance (el, dict) 
+            assert isinstance (el, dict)
             assert isinstance (el['id'], str)
             assert re.fullmatch (self._re_uuid4, el['id'])
             assert isinstance (el['ext_id'], str)
@@ -226,7 +227,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (el['ram'], str)
 
     def test_remote_create_get_delete (self):
-      
+
         import uuid
 
         first = 'test_remote_'+str(uuid.uuid4()).replace ('-','_')
@@ -247,13 +248,13 @@ class AppTestCase (unittest.TestCase):
                     "working_path": "/home/test_user/data/working",
                     "output_path": "/home/test_user/data/output"
                 }
-    
+
             resp = self._client.query().app.remote.post (body)
-    
+
             assert isinstance (resp, dict)
             for key in resp:
                 assert key in ['id', 'pub']
-    
+
             assert isinstance (resp['id'], str)
             assert re.fullmatch ("^remote:"+self._re_uuid4[1:], resp['id'])
             assert isinstance (resp['pub'], str)
@@ -270,10 +271,10 @@ class AppTestCase (unittest.TestCase):
             resp = self._client.query().app.remote(remote_id).get()
             print("resp:", resp)
             remote = resp
-    
+
             for key in remote:
                 assert key in ['id', 'name', 'ip', 'usr', 'input_path', 'working_path', 'output_path', 'num_cores', 'mem', 'ram', 'instanciated']
-    
+
             assert isinstance (remote['id'], str)
             assert re.fullmatch("^remote:"+self._re_uuid4[1:], remote['id'])
             assert isinstance (remote['num_cores'], int)
@@ -365,20 +366,20 @@ class AppTestCase (unittest.TestCase):
                 assert isinstance (remote['price'][key], float)
             assert isinstance(remote['ram'], str)
             assert re.fullmatch (self._re_mem, remote['ram'])
-            assert isinstance(remote['cores'], int)            
+            assert isinstance(remote['cores'], int)
             assert remote['cores'] > 0
 
     def test_remote_scw_get_post (self):
         return self.check_remote_cp_get_post ('scw')
 
     def test_remote_aws_get_post (self):
-        import os 
+        import os
 
         for field in ["AWS_ACCESS_KEY_ID",
                       "AWS_SECRET_ACCESS_KEY",
                       "AWS_S3_BUCKET",
                       "AWS_REGION"]:
-            assert field in os.environ 
+            assert field in os.environ
 
         creds = {
             "aws": {
@@ -386,7 +387,7 @@ class AppTestCase (unittest.TestCase):
                 "secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
                 "s3_bucket": os.environ["AWS_S3_BUCKET"],
                 }
-            } 
+            }
 
         return self.check_remote_cp_get_post ('aws', creds)
 
@@ -453,7 +454,7 @@ class AppTestCase (unittest.TestCase):
                                'agent',
                                'errors',
                                'tags']
-    
+
             assert resp['app'] == 'helloworld'
             assert resp['domain'] == 'test'
             assert resp['endpoint'] == 'run'
@@ -492,11 +493,11 @@ class AppTestCase (unittest.TestCase):
 
             if 'errors' in resp:
                 assert isinstance (resp['errors'], str)
-       
+
             return resp['state']
 
         def check_outputs ():
- 
+
             resp = self._client.query().app.process.outputs(puid).get ()
             time.sleep(1)
             resp = self._client.query().app.process.outputs(puid).get ()
@@ -537,9 +538,9 @@ class AppTestCase (unittest.TestCase):
 
         assert resp['state'] == 'dead'
 
-        check_outputs ()        
+        check_outputs ()
 
-        resp = self._client.query().app.cost.get (Process=puid)
+        resp = self._client.query().app.process.cost(puid).get()
 
         assert isinstance (resp, dict)
         assert len(resp) == 1
@@ -549,24 +550,24 @@ class AppTestCase (unittest.TestCase):
 
     def test_scaleway_process (self):
 
-        pool = ["scw:fr-par-1:PLAY2-PICO"]        
+        pool = ["scw:fr-par-1:PLAY2-PICO"]
         body = {
                 "inputs": {},
                 "output-prefix": "test",
-                "pool": pool 
+                "pool": pool
             }
 
-        self.process (body) 
+        self.process (body)
 
 #    def test_aws_process (self):
 #
-#        import os 
+#        import os
 #
 #        for field in ["AWS_ACCESS_KEY_ID",
 #                      "AWS_SECRET_ACCESS_KEY",
 #                      "AWS_S3_BUCKET",
 #                      "AWS_REGION"]:
-#            assert field in os.environ 
+#            assert field in os.environ
 #
 #        creds = {
 #            "aws": {
@@ -575,11 +576,11 @@ class AppTestCase (unittest.TestCase):
 #                "s3_bucket": os.environ["AWS_S3_BUCKET"],
 #                "region": os.environ["AWS_REGION"]
 #                }
-#            } 
+#            }
 #
 #        pool = [
 #                "aws:{}:t2.micro".format(os.environ["AWS_REGION"])
-#            ] 
+#            ]
 #
 #        body = {
 #                "inputs": {},
@@ -588,7 +589,7 @@ class AppTestCase (unittest.TestCase):
 #                "creds": creds
 #            }
 #
-#        self.process (body) 
+#        self.process (body)
 
 if __name__ == '__main__':
     unittest.main()
