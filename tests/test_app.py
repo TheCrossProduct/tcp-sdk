@@ -286,7 +286,7 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (remote['instanciated'], bool)
             assert not remote['instanciated']
 
-        resp = self._client.query().app.remotes.post({"num_cores":2})['remotes']
+        resp = [xx['name'] for xx in self._client.query().app.remotes.post({"num_cores":2})['remotes']]
 
         assert first not in resp
         assert second in resp
@@ -374,6 +374,8 @@ class AppTestCase (unittest.TestCase):
 
     def test_remote_aws_get_post (self):
         import os
+        if "AWS_ACCESS_KEY_ID" not in os.environ:
+            return
 
         for field in ["AWS_ACCESS_KEY_ID",
                       "AWS_SECRET_ACCESS_KEY",

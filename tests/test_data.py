@@ -33,6 +33,7 @@ class DataTestCase (unittest.TestCase):
 
         import os
         import filecmp
+        import time
 
         file_src = os.path.join (self._test_dir, 'test.txt')
         file_dest = os.path.join (self._test_dir, 'test-downloaded.txt')
@@ -51,6 +52,8 @@ class DataTestCase (unittest.TestCase):
         os.remove (file_dest)
 
         self._client.query().data.remove.post({'uri':"test.txt"})
+
+        time.sleep(1)
 
         resp = self._client.query().data.get()
         assert 'test.txt' not in resp['files']
