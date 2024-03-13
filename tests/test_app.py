@@ -32,6 +32,10 @@ class AppTestCase (unittest.TestCase):
             assert isinstance (resp[key], list)
             for el in resp[key]:
                 assert isinstance (el, str)
+    
+    def test_get_inputs (self):
+        resp = self._client.query().app.test.helloworld.inputs.get()
+        assert isinstance (resp, dict)
 
     def test_processes_get (self):
 
@@ -592,6 +596,9 @@ class AppTestCase (unittest.TestCase):
 #            }
 #
 #        self.process (body)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
