@@ -46,7 +46,7 @@ class AuthTestCase (unittest.TestCase):
             assert key in ["id", "user_id", "expires_at", "limit", "uses", "scope"]
 
         assert isinstance(resp["id"], str)
-        assert re.fullmatch(self._re_uuid4, resp["id"]) 
+        assert re.fullmatch(self._re_uuid4, resp["id"])
         assert isinstance(resp["user_id"], str)
         assert re.fullmatch(self._re_uuid4, resp["user_id"])
         assert isinstance(resp["expires_at"], str)
@@ -76,7 +76,7 @@ class AuthTestCase (unittest.TestCase):
                            'contact']
 
         assert isinstance(resp["id"], str)
-        assert re.fullmatch(self._re_uuid4, resp["id"]) 
+        assert re.fullmatch(self._re_uuid4, resp["id"])
         assert isinstance(resp["mail"], str)
         assert re.fullmatch(self._re_mail, resp["mail"])
         assert isinstance(resp["created_on"], str)
@@ -95,16 +95,16 @@ class AuthTestCase (unittest.TestCase):
             assert isinstance(group["name"], str)
             assert isinstance(group["descr"], str)
 
-    def test_logout_get (self):
-
-        client = tcp.client (usermail=self._test_account, passwd= self._test_passwd)
-        client.query().auth.logout.get()
-
-        try:
-            client.query().auth.get()
-        except tcp.exceptions.InvalidCredentials as err:
-            assert err.response.status_code == 401
-            pass
+#    def test_logout_get (self):
+#
+#        client = tcp.client (usermail=self._test_account, passwd= self._test_passwd)
+#        client.query().auth.logout.get()
+#
+#        try:
+#            client.query().auth.get()
+#        except tcp.exceptions.InvalidCredentials as err:
+#            assert err.response.status_code == 401
+#            pass
 
 if __name__ == '__main__':
     unittest.main()

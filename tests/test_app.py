@@ -269,7 +269,6 @@ class AppTestCase (unittest.TestCase):
         for remote_id in ids:
 
             resp = self._client.query().app.remote(remote_id).get()
-            print("resp:", resp)
             remote = resp
 
             for key in remote:

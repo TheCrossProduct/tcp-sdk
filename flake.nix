@@ -44,14 +44,21 @@
           providers={notebook="nixpkgs";};
         };
 
-        default = module;
-      };
+        test_files = nixpkgs_.stdenv.mkDerivation { 
+            name = "tests_sdk_files";
+            src = ./tests;
+            installPhase = ''
+              mkdir $out 
+              cp -v $src/* $out
+            '';
+        }; 
 
-      apps = rec {
-        default = {
-          type="app";
-          program="${self.packages.x86_64-linux.pyInterpreter}/bin/test.sh";
-        };
+        tests = nixpkgs_.writeShellScript "tests_sdk.sh" ''
+              set source
+              ${pyInterpreter}/bin/python -m unittest discover -s ${test_files}
+            '';
+
+        default = module;
       };
 
       devShells.default = machnix.lib.${system}.mkPythonShell {
