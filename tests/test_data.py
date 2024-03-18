@@ -4,7 +4,7 @@ import tcp
 import re
 
 def check_resp (resp):
-            assert isinstance (resp, dict)
+    assert isinstance (resp, dict)
 
 class DataTestCase (unittest.TestCase):
 
@@ -22,6 +22,9 @@ class DataTestCase (unittest.TestCase):
         self._test_passwd = os.environ["TCP_TEST_PASSWD"]
         self._client = tcp.client (usermail=self._test_account, passwd= self._test_passwd)
 
+        self._re_mem = "^[1-9][0-9]{0,32}(|.[0-9]+)(|b|Kb|Mb|Gb|Tb|Pb)$"
+
+
     def test_get (self):
 
         resp = self._client.query().data.get()
@@ -30,8 +33,6 @@ class DataTestCase (unittest.TestCase):
         assert isinstance(resp, dict)
         assert 'files' in resp
         assert isinstance(resp['files'], list)
-
-
 
     def test_post (self):
 
@@ -76,13 +77,13 @@ class DataTestCase (unittest.TestCase):
 
         assert 'download_count' in resp['files'][0]
         assert isinstance(resp['files'][0]['download_count'],int)
-        
+
 
     def test_get_next_previous (self):
 
         import requests,json
         resp = self._client.query().data.post({'items_per_page':2})
-        # This test suppose to have more than 2 files in this account 
+        # This test suppose to have more than 2 files in this account
         assert 'paging' in resp
         assert 'next' in resp['paging']
 
@@ -90,15 +91,14 @@ class DataTestCase (unittest.TestCase):
         response=requests.get(url,headers={'authorization':'bearer '+self._client.token})
         resp=json.loads(response.text)
         assert 'files' in resp
-        assert isinstance(resp['files'], list)  
-        
+        assert isinstance(resp['files'], list)
+
         assert 'previous' in resp['paging']
         url=resp['paging']['previous']
         response=requests.get(url,headers={'authorization':'bearer '+self._client.token})
         resp=json.loads(response.text)
         assert 'files' in resp
-        assert isinstance(resp['files'], list)  
-                  
+        assert isinstance(resp['files'], list)
 
     def test_exists(self):
         self._client.query().data.exists({"uri":"filetest.txt"})
@@ -108,7 +108,7 @@ class DataTestCase (unittest.TestCase):
         self._client.query().data.move.post({'src':'filetest.txt','dest':'filetest-move.txt'})
         time.sleep(2)
         self._client.query().data.move.post({'src':'filetest-move.txt','dest':'filetest.txt'})
-        
+
     def test_download_upload_delete (self):
         import os
         import filecmp
@@ -125,7 +125,7 @@ class DataTestCase (unittest.TestCase):
 
         resp = self._client.query().data.get()
         assert 'test.txt' in resp['files']
-        
+
         self._client.download ('test.txt', file_dest)
         time.sleep(2)
         assert os.path.exists(file_dest)
@@ -140,8 +140,7 @@ class DataTestCase (unittest.TestCase):
         resp = self._client.query().data.get()
         assert 'test.txt' not in resp['files']
 
-
-    def test_single_part (self): 
+    def test_single_part (self):
 
         import requests,os,time
         resp=self._client.query().data.upload.singlepart.post({'uri':'test-singlepart.txt'})
@@ -159,11 +158,22 @@ class DataTestCase (unittest.TestCase):
         assert 'test-singlepart.txt' in resp['files']
         self._client.query().data.remove.post({'uri':"test-singlepart.txt"})
 
-  #  def test_summary (self): 
+    def test_summary (self):
 
-  #      resp=self._client.query().data.summary.get()
-        # TODO : add assert when endpoint will be fix
+        resp=self._client.query().data.summary.get()
 
+        for field in ['users', 'groups']:
+            assert field in resp
+            for key in resp[field]:
+                assert re.fullmatch (self._re_mem, resp[field][key])
+
+        assert "uploads" in resp
+        assert "from" in resp["uploads"]
+        datetime.datetime.fromisoformat (resp["uploads"]["from"])
+        assert "to" in resp["uploads"]
+        datetime.datetime.fromisoformat (resp["uploads"]["to"])
+
+        assert "files" in resp["uploads"]
 
 if __name__ == '__main__':
     unittest.main()

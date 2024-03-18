@@ -6,24 +6,25 @@ from slumber.serialize import Serializer, JsonSerializer
 from slumber.exceptions import HttpClientError, HttpServerError
 
 from .clientAPI import clientAPI
-from . import exceptions 
-from .text_serializer import PlainTextSerializer        
+from . import exceptions
+from .text_serializer import PlainTextSerializer
 from ._version import __version__
 
 class client (object):
 
     user_agent = 'tcp-sdk/%s Python/%s %s' % (__version__, ' '.join(sys.version.split()), platform.platform())
 
-    def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None):
+    def __init__ (self, host:str=None, token:str=None, user_agent:str=None, usermail:str=None, passwd:str=None, keep_track=False):
         '''
         OOP to TCP API.
 
         Args:
-            host (str): uri of TCP SDK as protocol + ip + port + api version (e.g https://api.thecrossproduct.xyz/v1 or http://127.0.0.1:8080/v1) 
+            host (str): uri of TCP SDK as protocol + ip + port + api version (e.g https://api.thecrossproduct.xyz/v1 or http://127.0.0.1:8080/v1)
             token (str): connection JWT
             user_agent (str): Additional info for logging purposes.
             usermail (str): If no token, then it will connect using credentials.
             passwd (str)
+            keep_track (bool): log every requests in a dict (f'{addr}+{method}':integer).
 
         Exceptions:
             tcp.exceptions.InvalidCredentials
@@ -57,7 +58,7 @@ class client (object):
             import json
             from .logs import warning
 
-            resp = clientAPI (self.host, 
+            resp = clientAPI (self.host,
                               self.host,
                               session=self._make_requests_session(),
                               auth=HTTPBasicAuth(usermail,passwd),
@@ -67,9 +68,18 @@ class client (object):
 
         if not self.token:
             if 'TCP_API_TOKEN' not in os.environ.keys():
-                raise exceptions.InvalidCredentials ("No token available: either use BasicAuth or set the env var $TCP_API_TOKEN") 
+                raise exceptions.InvalidCredentials ("No token available: either use BasicAuth or set the env var $TCP_API_TOKEN")
 
             self.token = os.environ['TCP_API_TOKEN']
+
+        if keep_track:
+            self.keep_track = True
+            self.endpoints_usage = {}
+
+            for ee in self._get_endpoints():
+                for mm in ee['methods']:
+                    key = f"{ee.enpoint}+{mm}"
+                    self.endpoints_usage[key] = 0
 
     def _make_requests_session (self):
 
@@ -88,11 +98,14 @@ class client (object):
         Use this method to perform a query to TCP API.
         '''
 
+        if self.keep_track:
+            kwargs["endpoints_usage"] = self.endpoints_usage
+
         api = clientAPI (self.host,
                          self.host,
                          session=self._make_requests_session(),
                          serializer=Serializer(default="json",
-                                               serializers=[JsonSerializer(), 
+                                               serializers=[JsonSerializer(),
                                                             PlainTextSerializer()]),
                          **kwargs)
 
@@ -104,7 +117,7 @@ class client (object):
                          self.host + '/help',
                          session=self._make_requests_session(),
                          serializer=Serializer(default="json",
-                                               serializers=[JsonSerializer(), 
+                                               serializers=[JsonSerializer(),
                                                             PlainTextSerializer()]))
 
         return api._get_resource(**api._store).get()
@@ -195,12 +208,12 @@ class client (object):
                "upload_gdrive\t - from your google drive to TCP S3 storage\n"
 #               "metrics\t\t- display %cpu and %rss for a given proces"
                )
-            
+
 
         if self.token and should_print_license:
 
             print ("\n\nYou have licenses for the following applications:\n")
-    
+
             try:
                 apps = self.query().app.get ()
             except exceptions.InvalidCredentials as err:
@@ -216,7 +229,7 @@ class client (object):
                 print ('NO APPLICATION')
             print ('\n')
 
-            if apps: 
+            if apps:
                 print ('Use this line to query help on a specific application:\n')
                 print (f'client.help(app=\'{list_of_apps[0]}\')')
 
@@ -227,27 +240,27 @@ class client (object):
         Args:
             src_gdrive (str): URL of the Google Drive folder or file. It must be shared as 'Anyone with the link'.
             dest_s3 (str): desired path in TCP S3 bucket
-            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb") 
- 
+            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb")
+
         Exceptions:
             tcp.exceptions.UploadError
         '''
         import gdown
         import tempfile
         import os
-        import pathlib  
+        import pathlib
 
         is_folder = "folders" == src_gdrive.split("/")[4]
-        
+
         fp = tempfile.TemporaryDirectory ()
 
         if is_folder:
             gdown.download_folder (url=src_gdrive, output=fp.name, remaining_ok=True)
 
-            files = [str(x) for x in list (pathlib.Path(fp.name).iterdir())] 
+            files = [str(x) for x in list (pathlib.Path(fp.name).iterdir())]
 
             for file in files:
-                rel_path = file[len(fp.name)+1:] 
+                rel_path = file[len(fp.name)+1:]
                 self.upload (file, os.path.join(dest_s3, rel_path), max_part_size, num_tries, delay_between_tries)
         else:
             file = gdown.download (url=src_gdrive, output=fp.name)
@@ -263,7 +276,7 @@ class client (object):
         Args:
             src_local (str): path to your file on your local computer
             dest_s3 (str): desired path in TCP S3 bucket
-            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb") 
+            max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb")
 
         Exceptions:
             tcp.exceptions.UploadError
@@ -276,7 +289,7 @@ class client (object):
                 3. Merging files and completing the upload
 
             Internally it uses the following TCP endpoints:
-                - POST generate_presigned_multipart_post 
+                - POST generate_presigned_multipart_post
                 - POST complete_multipart_post
         '''
         import os
@@ -292,9 +305,9 @@ class client (object):
 
             for root, dirs, files in os.walk (src_local):
                 for file in files:
-                    self.upload (os.path.normpath(os.path.join(root,file)), 
+                    self.upload (os.path.normpath(os.path.join(root,file)),
                                  os.path.join(
-                                     os.path.join(os.path.normpath(dest_s3),root_in_s3), 
+                                     os.path.join(os.path.normpath(dest_s3),root_in_s3),
                                      os.path.normpath(os.path.join(os.path.normpath(root[len(src_local):]),file))
                                      ).replace('\\','/'),
                                  max_part_size
@@ -304,14 +317,12 @@ class client (object):
         if verbose:
             stderr.write (f"Uploading {src_local} to {dest_s3} (max part size: {max_part_size})")
 
-        #TODO adding multithread and retry process when error
-        #1: S3 target space definition
         file_size = str(os.path.getsize(src_local))
         presigned_body={"uri": dest_s3,"size": file_size}
 
         if max_part_size:
             presigned_body.update({"part_size":max_part_size})
-        
+
         try:
             resp=self.query().data.upload.multipart.post(presigned_body)
         except slumber.exceptions.SlumberHttpBaseException as err:
@@ -333,7 +344,7 @@ class client (object):
 
         from .upload import _upload_part
 
-        for try_num in range(num_tries): 
+        for try_num in range(num_tries):
 
             if not todo_parts:
                 break
@@ -348,7 +359,7 @@ class client (object):
 
             with multiprocessing.Pool () as pool:
 
-                for result in pool.imap_unordered (_upload_part, 
+                for result in pool.imap_unordered (_upload_part,
                                                    ([url, part_no, [src_local, part_size]] for url, part_no in todo_parts)):
 
                     has_successed, out = result
@@ -362,7 +373,7 @@ class client (object):
 
             todo_parts = failed_parts
 
-        completed_parts.sort (key=lambda x: x['PartNumber']) 
+        completed_parts.sort (key=lambda x: x['PartNumber'])
 
         has_failed = (len(todo_parts) > 0)
 
@@ -404,8 +415,8 @@ class client (object):
         Download of a file from local repository to S3 repository.
 
         Args:
-            src_s3 (str): path in TCP S3 bucket 
-            dest_local (str): desired path in your local computer 
+            src_s3 (str): path in TCP S3 bucket
+            dest_local (str): desired path in your local computer
             chunk_size (int): desired chunk size for streaming download
 
         Exceptions:
@@ -414,8 +425,8 @@ class client (object):
         Notes:
 
             Works accordingly to the following sequence:
-                1. Get a temporary link to our S3 
-                2. Download file from that link using a stream 
+                1. Get a temporary link to our S3
+                2. Download file from that link using a stream
 
             Internally it uses the following TCP endpoints:
                 - POST generate_presigned_get
@@ -427,7 +438,7 @@ class client (object):
         import sys
         import hashlib
 
-        body = {} 
+        body = {}
         body['uri'] = src_s3
 
         try:
@@ -437,19 +448,19 @@ class client (object):
 
         url = resp['url']
 
-        for try_num in range(num_tries): 
+        for try_num in range(num_tries):
 
             if try_num > 0:
                 if verbose:
                     sys.stderr.write (f"download {dest_local}: trying again ({try_num+1}/{num_tries})")
                 time.sleep (delay_between_tries)
 
-            try: 
+            try:
                 with requests.get(url, stream=True) as r:
                     r.raise_for_status ()
                     with open (dest_local, 'wb') as f:
                         for chunk in r.iter_content(chunk_size=chunk_size):
-                            f.write(chunk) 
+                            f.write(chunk)
                 return
 
             except requests.exceptions.HTTPError as err:

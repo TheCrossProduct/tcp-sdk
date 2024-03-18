@@ -17,9 +17,9 @@ class clientResource (slumber.Resource):
         except exceptions.HttpClientError as err:
             if err.response.status_code == "404":
                 raise exceptions.NoDocumentation(str(err), **err.__dict__) from err
-            raise err 
+            raise err
 
-        return resp 
+        return resp
 
     def help (self):
         print (self._get_help())
@@ -31,6 +31,14 @@ class clientResource (slumber.Resource):
     def _request (self, *args, **kwargs):
 
         retry = 0
+
+        if hasattr(self, endpoints_usage):
+            key = self._store["base_url"].replace(self._store["host"], "") +"+"+ kwargs['method']
+            import re
+            for pattern in self.endpoints_usage:
+                if re.fullmatch(pattern,key):
+                    self.endpoints_usage[pattern] += 1
+                    break
 
         while True:
 
@@ -71,11 +79,11 @@ class clientResource (slumber.Resource):
 
         return resp.content
 
-
 class clientAPI (slumber.API):
     resource_class = clientResource
 
-    def __init__ (self, host=None, base_url=None, auth=None, format=None, append_slash=False, session=None, serializer=None):
+    def __init__ (self, host=None, base_url=None, auth=None, format=None, append_slash=False, session=None, serializer=None, endpoints_usage={}):
 
         super ().__init__ (base_url, auth, format, append_slash, session, serializer)
         self._store.update ({"host": host})
+        self.endpoints_usage = endpoints_usage
