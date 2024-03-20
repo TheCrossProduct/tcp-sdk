@@ -32,13 +32,13 @@ class clientResource (slumber.Resource):
 
         retry = 0
 
-        if hasattr(self, endpoints_usage):
-            key = self._store["base_url"].replace(self._store["host"], "") +"+"+ kwargs['method']
-            import re
-            for pattern in self.endpoints_usage:
-                if re.fullmatch(pattern,key):
-                    self.endpoints_usage[pattern] += 1
-                    break
+        #if hasattr(self, "endpoints_usage"):
+        #    key = self._store["base_url"].replace(self._store["host"], "") +"+"+ args[0]
+        #    import re
+        #    for pattern in super(clientResource, self).endpoints_usage:
+        #        if re.fullmatch(pattern,key):
+        #            self.endpoints_usage[pattern] += 1
+        #            break
 
         while True:
 
@@ -86,4 +86,4 @@ class clientAPI (slumber.API):
 
         super ().__init__ (base_url, auth, format, append_slash, session, serializer)
         self._store.update ({"host": host})
-        self.endpoints_usage = endpoints_usage
+        #self.endpoints_usage = endpoints_usage

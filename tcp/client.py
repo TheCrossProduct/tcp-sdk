@@ -98,7 +98,7 @@ class client (object):
         Use this method to perform a query to TCP API.
         '''
 
-        if self.keep_track:
+        if hasattr(self, "keep_track"):
             kwargs["endpoints_usage"] = self.endpoints_usage
 
         api = clientAPI (self.host,
