@@ -425,7 +425,7 @@ class AppTestCase (unittest.TestCase):
 
     def process (self, body):
 
-        resp = self._client.query().app.test.helloworld.run.post({"inputs":{}})
+        resp = self._client.query().app.test.helloworld.run.post(body)
 
         assert isinstance (resp, dict)
         assert len(resp) == 1
@@ -564,40 +564,37 @@ class AppTestCase (unittest.TestCase):
 
         self.process (body)
 
-#    def test_aws_process (self):
-#
-#        import os
-#
-#        for field in ["AWS_ACCESS_KEY_ID",
-#                      "AWS_SECRET_ACCESS_KEY",
-#                      "AWS_S3_BUCKET",
-#                      "AWS_REGION"]:
-#            assert field in os.environ
-#
-#        creds = {
-#            "aws": {
-#                "access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
-#                "secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
-#                "s3_bucket": os.environ["AWS_S3_BUCKET"],
-#                "region": os.environ["AWS_REGION"]
-#                }
-#            }
-#
-#        pool = [
-#                "aws:{}:t2.micro".format(os.environ["AWS_REGION"])
-#            ]
-#
-#        body = {
-#                "inputs": {},
-#                "output-prefix": "s3://test",
-#                "pool": pool,
-#                "creds": creds
-#            }
-#
-#        self.process (body)
+    def test_aws_process (self):
 
+        import os
 
+        for field in ["AWS_ACCESS_KEY_ID",
+                      "AWS_SECRET_ACCESS_KEY",
+                      "AWS_S3_BUCKET",
+                      "AWS_REGION"]:
+            assert field in os.environ
 
+        creds = {
+            "aws": {
+                "access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+                "secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+                "s3_bucket": os.environ["AWS_S3_BUCKET"],
+                "region": os.environ["AWS_REGION"]
+                }
+            }
+
+        pool = [
+                "aws:{}:t2.micro".format(os.environ["AWS_REGION"])
+            ]
+
+        body = {
+                "inputs": {},
+                "output-prefix": "s3://test",
+                "pool": pool,
+                "creds": creds
+            }
+
+        self.process (body)
 
 if __name__ == '__main__':
     unittest.main()
