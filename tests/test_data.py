@@ -120,13 +120,13 @@ class DataTestCase (unittest.TestCase):
         with open(file_src, 'w') as f:
             f.write ("This is a test. You can safely remove this file.")
 
-        self._client.upload (file_src, 'test.txt')
+        self._client.upload (file_src, 'aaa-test.txt')
         time.sleep(2)
 
         resp = self._client.query().data.get()
-        assert 'test.txt' in resp['files']
+        assert 'aaa-test.txt' in resp['files']
 
-        self._client.download ('test.txt', file_dest)
+        self._client.download ('aaa-test.txt', file_dest)
         time.sleep(2)
         assert os.path.exists(file_dest)
 
@@ -134,11 +134,11 @@ class DataTestCase (unittest.TestCase):
         os.remove (file_src)
         os.remove (file_dest)
 
-        self._client.query().data.remove.post({'uri':"test.txt"})
+        self._client.query().data.remove.post({'uri':"aaa-test.txt"})
         time.sleep(4)
 
         resp = self._client.query().data.get()
-        assert 'test.txt' not in resp['files']
+        assert 'aaa-test.txt' not in resp['files']
 
     def test_single_part (self):
 
