@@ -215,6 +215,7 @@ class AppTestCase (unittest.TestCase):
 
             assert isinstance (el, dict)
             assert isinstance (el['id'], str)
+            True for pm launced at least after 2024-03-12.
             assert re.fullmatch (self._re_instance_id, el['id'])
             assert isinstance (el['ext_id'], str)
             assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id'])) or el['ext_id'] == ''

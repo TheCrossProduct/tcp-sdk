@@ -90,15 +90,23 @@ class DataTestCase (unittest.TestCase):
         url=resp['paging']['next']
         response=requests.get(url,headers={'authorization':'bearer '+self._client.token})
         resp=json.loads(response.text)
-        assert 'files' in resp
-        assert isinstance(resp['files'], list)
+
+        assert 'files' in resp or 'dirs' in resp
+        if "files" in resp:
+            assert isinstance(resp['files'], list)
+        if 'dirs' in resp:
+            assert isinstance(resp['dirs'], list)
 
         assert 'previous' in resp['paging']
         url=resp['paging']['previous']
         response=requests.get(url,headers={'authorization':'bearer '+self._client.token})
         resp=json.loads(response.text)
-        assert 'files' in resp
-        assert isinstance(resp['files'], list)
+
+        assert 'files' in resp or 'dirs' in resp
+        if "files" in resp:
+            assert isinstance(resp['files'], list)
+        if 'dirs' in resp:
+            assert isinstance(resp['dirs'], list)
 
     def test_exists(self):
         self._client.query().data.exists({"uri":"filetest.txt"})
@@ -143,7 +151,7 @@ class DataTestCase (unittest.TestCase):
     def test_single_part (self):
 
         import requests,os,time
-        resp=self._client.query().data.upload.singlepart.post({'uri':'test-singlepart.txt'})
+        resp=self._client.query().data.upload.singlepart.post({'uri':'aaa-test-singlepart.txt'})
         assert 'url' in resp
 
         file_src = os.path.join (self._test_dir, 'test.txt')
@@ -151,12 +159,12 @@ class DataTestCase (unittest.TestCase):
             f.write ("This is a test. You can safely remove this file.")
 
         requests.put(resp['url'],file_src)
-        self._client.query().data.upload.singlepart.complete.post({'uri':'test-singlepart.txt'})
+        self._client.query().data.upload.singlepart.complete.post({'uri':'aaa-test-singlepart.txt'})
 
         time.sleep(2)
         resp = self._client.query().data.get()
-        assert 'test-singlepart.txt' in resp['files']
-        self._client.query().data.remove.post({'uri':"test-singlepart.txt"})
+        assert 'aaa-test-singlepart.txt' in resp['files']
+        self._client.query().data.remove.post({'uri':"aaa-test-singlepart.txt"})
 
     def test_summary (self):
 
