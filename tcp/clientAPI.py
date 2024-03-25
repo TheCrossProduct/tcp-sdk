@@ -32,8 +32,8 @@ class clientResource (slumber.Resource):
 
         retry = 0
 
-        if self._store["keep_track"]:
-            from .track_usage import TrackUsage
+        from .track_usage import TrackUsage
+        if self._store["keep_track"] and hasattr(TrackUsage(), "uses"):
             key = self._store["base_url"].replace(self._store["host"], "") +"+"+ args[0]
             import re
             for pattern in TrackUsage().uses:

@@ -23,27 +23,26 @@ class AppTestCase (unittest.TestCase):
         self._re_remote_id = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
         self._re_instance_id = "^[0-9]+\-[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
 
-    def tearDown (self):
-
-        uses = tcp.track_usage.TrackUsage()
+    def test_z_check_uses (self):
+        uses = tcp.track_usage.TrackUsage().uses
 
         for key in uses:
-            if key.startswith("/app"):
-                assert uses[key] > 0
+            if key.startswith("^\/app"):
+                self.assertGreater(uses[key], 0, f'Endpoint {key} has not been tested')
 
     def test_get (self):
         resp = self._client.query().app.get()
 
-        assert isinstance (resp, dict)
+        self.assertIsInstance (resp, dict)
 
         for key in resp:
-            assert isinstance (resp[key], list)
+            self.assertIsInstance (resp[key], list)
             for el in resp[key]:
-                assert isinstance (el, str)
+                self.assertIsInstance (el, str)
 
     def test_get_inputs (self):
         resp = self._client.query().app.test.helloworld.inputs.get()
-        assert isinstance (resp, dict)
+        self.assertIsInstance (resp, dict)
 
     def test_processes_get (self):
 
@@ -52,43 +51,43 @@ class AppTestCase (unittest.TestCase):
         if not resp:
             return
 
-        assert isinstance (resp, dict)
+        self.assertIsInstance (resp, dict)
 
         assert 'processes' in resp
-        assert isinstance (resp['processes'], list)
+        self.assertIsInstance (resp['processes'], list)
 
         for el in resp['processes']:
 
             for key in el:
-                assert key in ['id',
-                               'app',
-                               'domain',
-                               'endpoint',
-                               'launched',
-                               'terminated',
-                               'expires',
-                               'body',
-                               'state',
-                               'quote',
-                               'errors',
-                               'agent',
-                               'tags']
+                self.assertIn (key, ['id',
+                                     'app',
+                                     'domain',
+                                     'endpoint',
+                                     'launched',
+                                     'terminated',
+                                     'expires',
+                                     'body',
+                                     'state',
+                                     'quote',
+                                     'errors',
+                                     'agent',
+                                     'tags'])
 
-            assert isinstance (el, dict)
-            assert isinstance (el['id'], str)
+            self.assertIsInstance (el, dict)
+            self.assertIsInstance (el['id'], str)
             assert re.fullmatch (self._re_uuid4, el['id'])
-            assert isinstance (el['app'], str)
-            assert isinstance (el['domain'], str)
-            assert isinstance (el['endpoint'], str)
-            assert el['endpoint'] in ['run', 'test', 'quotation']
-            assert isinstance (el['launched'], str)
+            self.assertIsInstance (el['app'], str)
+            self.assertIsInstance (el['domain'], str)
+            self.assertIsInstance (el['endpoint'], str)
+            self.assertIn(el['endpoint'], ['run', 'test', 'quotation'])
+            self.assertIsInstance (el['launched'], str)
             datetime.datetime.fromisoformat (el['launched'])
-            assert isinstance (el['terminated'], str)
+            self.assertIsInstance (el['terminated'], str)
             datetime.datetime.fromisoformat (el['terminated'])
-            assert isinstance (el['expires'], str)
+            self.assertIsInstance (el['expires'], str)
             datetime.datetime.fromisoformat (el['expires'])
-            assert isinstance (el['body'], dict)
-            assert isinstance (el['state'], str)
+            self.assertIsInstance (el['body'], dict)
+            self.assertIsInstance (el['state'], str)
 
 
     def test_instances_get (self):
@@ -98,57 +97,57 @@ class AppTestCase (unittest.TestCase):
         if not resp:
             return
 
-        assert isinstance (resp, dict)
+        self.assertIsInstance (resp, dict)
 
         assert 'instances' in resp
-        assert isinstance (resp['instances'], list)
+        self.assertIsInstance (resp['instances'], list)
 
         for el in resp['instances']:
 
             for key in el:
-                assert key in ['id',
-                               'ext_id',
-                               'process_id',
-                               'pool',
-                               'launched',
-                               'expires',
-                               'state',
-                               'ip',
-                               'ssh_usr',
-                               'input_path',
-                               'working_path',
-                               'output_path',
-                               'num_cores',
-                               'mem_required',
-                               'ram_required']
+                self.assertIn(key, ['id',
+                                    'ext_id',
+                                    'process_id',
+                                    'pool',
+                                    'launched',
+                                    'expires',
+                                    'state',
+                                    'ip',
+                                    'ssh_usr',
+                                    'input_path',
+                                    'working_path',
+                                    'output_path',
+                                    'num_cores',
+                                    'mem_required',
+                                    'ram_required'])
 
-            assert isinstance (el, dict)
-            assert isinstance (el['id'], str)
+            self.assertIsInstance (el, dict)
+            self.assertIsInstance (el['id'], str)
             assert re.fullmatch (self._re_instance_id, el['id'])
-            assert isinstance (el['ext_id'], str)
+            self.assertIsInstance (el['ext_id'], str)
             assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id']) or not el['ext_id'])
-            assert isinstance (el['process_id'], str)
+            self.assertIsInstance (el['process_id'], str)
             assert re.fullmatch (self._re_uuid4, el['process_id'])
-            assert isinstance (el['launched'], str)
+            self.assertIsInstance (el['launched'], str)
             datetime.datetime.fromisoformat (el['launched'])
-            assert isinstance (el['pool'], type([]))
-            assert isinstance (el['expires'], str)
+            self.assertIsInstance (el['pool'], type([]))
+            self.assertIsInstance (el['expires'], str)
             datetime.datetime.fromisoformat (el['expires'])
-            assert isinstance (el['state'], str)
-            assert isinstance (el['ip'], str)
+            self.assertIsInstance (el['state'], str)
+            self.assertIsInstance (el['ip'], str)
             assert re.fullmatch (self._re_ip, el['ip']) or not el['ip']
-            assert isinstance (el['ssh_usr'], str)
+            self.assertIsInstance (el['ssh_usr'], str)
             assert re.fullmatch (self._re_usr, el['ssh_usr']) or not el['ssh_usr']
-            assert isinstance (el['input_path'], str)
+            self.assertIsInstance (el['input_path'], str)
             assert re.fullmatch (self._re_path, el['input_path']) or not el['input_path']
-            assert isinstance (el['working_path'], str)
+            self.assertIsInstance (el['working_path'], str)
             assert re.fullmatch (self._re_path, el['working_path']) or not el['working_path']
-            assert isinstance (el['output_path'], str)
+            self.assertIsInstance (el['output_path'], str)
             assert re.fullmatch (self._re_path, el['output_path']) or not el['output_path']
-            assert isinstance (el['num_cores'], int)
+            self.assertIsInstance (el['num_cores'], int)
             assert el['num_cores'] > 0
-            assert isinstance (el['mem_required'], str)
-            assert isinstance (el['ram_required'], str)
+            self.assertIsInstance (el['mem_required'], str)
+            self.assertIsInstance (el['ram_required'], str)
 
     def test_remotes_get (self):
 
@@ -157,44 +156,44 @@ class AppTestCase (unittest.TestCase):
         if not resp:
             return
 
-        assert isinstance (resp, dict)
+        self.assertIsInstance (resp, dict)
 
         assert 'remotes' in resp
-        assert isinstance (resp['remotes'], list)
+        self.assertIsInstance (resp['remotes'], list)
 
         for el in resp['remotes']:
 
             for key in el:
-                assert key in ['id',
-                               'name',
-                               'ip',
-                               'usr',
-                               'num_cores',
-                               'mem',
-                               'ram',
-                               'input_path',
-                               'working_path',
-                               'output_path',
-                               'instanciated']
+                self.assertIn(key, ['id',
+                                    'name',
+                                    'ip',
+                                    'usr',
+                                    'num_cores',
+                                    'mem',
+                                    'ram',
+                                    'input_path',
+                                    'working_path',
+                                    'output_path',
+                                    'instanciated'])
 
-            assert isinstance (el, dict)
-            assert isinstance (el['id'], str)
+            self.assertIsInstance (el, dict)
+            self.assertIsInstance (el['id'], str)
             assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['id']) or re.fullmatch(self._re_remote_id, el['id']))
-            assert isinstance (el['ip'], str)
+            self.assertIsInstance (el['ip'], str)
             assert re.fullmatch (self._re_ip, el['ip'])
-            assert isinstance (el['usr'], str)
+            self.assertIsInstance (el['usr'], str)
             assert re.fullmatch (self._re_usr, el['usr'])
-            assert isinstance (el['num_cores'], int)
-            assert el['num_cores'] > 0
-            assert isinstance (el['mem'], str)
-            assert isinstance (el['ram'], str)
-            assert isinstance (el['input_path'], str)
+            self.assertIsInstance (el['num_cores'], int)
+            self.assertGreater(el['num_cores'], 0)
+            self.assertIsInstance (el['mem'], str)
+            self.assertIsInstance (el['ram'], str)
+            self.assertIsInstance (el['input_path'], str)
             assert re.fullmatch (self._re_path, el['input_path'])
-            assert isinstance (el['working_path'], str)
+            self.assertIsInstance (el['working_path'], str)
             assert re.fullmatch (self._re_path, el['working_path'])
-            assert isinstance (el['output_path'], str)
+            self.assertIsInstance (el['output_path'], str)
             assert re.fullmatch (self._re_path, el['output_path'])
-            assert isinstance (el['instanciated'], bool)
+            self.assertIsInstance (el['instanciated'], bool)
 
     def test_postmortems_get (self):
 
@@ -203,40 +202,40 @@ class AppTestCase (unittest.TestCase):
         if not resp:
             return
 
-        assert isinstance (resp, dict)
+        self.assertIsInstance (resp, dict)
 
         assert 'postmortems' in resp
-        assert isinstance (resp['postmortems'], list)
+        self.assertIsInstance (resp['postmortems'], list)
 
         for el in resp['postmortems']:
 
             for key in el:
-                assert key in ['id',
-                               'ext_id',
-                               'process_id',
-                               'launched',
-                               'terminated',
-                               'state',
-                               'num_cores',
-                               'mem',
-                               'ram']
+                self.assertIn(key, ['id',
+                                    'ext_id',
+                                    'process_id',
+                                    'launched',
+                                    'terminated',
+                                    'state',
+                                    'num_cores',
+                                    'mem',
+                                    'ram'])
 
-            assert isinstance (el, dict)
-            assert isinstance (el['id'], str)
+            self.assertIsInstance (el, dict)
+            self.assertIsInstance (el['id'], str)
             assert re.fullmatch (self._re_instance_id, el['id'])
-            assert isinstance (el['ext_id'], str)
+            self.assertIsInstance (el['ext_id'], str)
             assert (re.fullmatch ('^remote:'+self._re_uuid4[1:], el['ext_id']) or re.fullmatch(self._re_remote_id, el['ext_id'])) or el['ext_id'] == ''
-            assert isinstance (el['process_id'], str)
+            self.assertIsInstance (el['process_id'], str)
             assert re.fullmatch (self._re_uuid4, el['process_id'])
-            assert isinstance (el['launched'], str)
+            self.assertIsInstance (el['launched'], str)
             datetime.datetime.fromisoformat (el['launched'])
-            assert isinstance (el['terminated'], str)
+            self.assertIsInstance (el['terminated'], str)
             datetime.datetime.fromisoformat (el['terminated'])
-            assert isinstance (el['state'], str)
-            assert isinstance (el['num_cores'], int)
-            assert el['num_cores'] > 0
-            assert isinstance (el['mem'], str)
-            assert isinstance (el['ram'], str)
+            self.assertIsInstance (el['state'], str)
+            self.assertIsInstance (el['num_cores'], int)
+            self.assertGreater(el['num_cores'], 0)
+            self.assertIsInstance (el['mem'], str)
+            self.assertIsInstance (el['ram'], str)
 
     def test_remote_create_get_delete (self):
 
@@ -263,20 +262,20 @@ class AppTestCase (unittest.TestCase):
 
             resp = self._client.query().app.remote.post (body)
 
-            assert isinstance (resp, dict)
+            self.assertIsInstance (resp, dict)
             for key in resp:
-                assert key in ['id', 'pub']
+                self.assertIn(key, ['id', 'pub'])
 
-            assert isinstance (resp['id'], str)
+            self.assertIsInstance (resp['id'], str)
             assert re.fullmatch ("^remote:"+self._re_uuid4[1:], resp['id'])
-            assert isinstance (resp['pub'], str)
+            self.assertIsInstance (resp['pub'], str)
             assert re.fullmatch ("^ssh-ed25519 [a-zA-Z0-9\/+]+$", resp['pub'])
 
             ids.append (resp['id'])
 
         resp = self._client.query().app.remotes.get ()
 
-        assert isinstance (resp, dict)
+        self.assertIsInstance (resp, dict)
 
         for remote_id in ids:
 
@@ -284,33 +283,43 @@ class AppTestCase (unittest.TestCase):
             remote = resp
 
             for key in remote:
-                assert key in ['id', 'name', 'ip', 'usr', 'input_path', 'working_path', 'output_path', 'num_cores', 'mem', 'ram', 'instanciated']
+                self.assertIn(key, ['id',
+                                    'name',
+                                    'ip',
+                                    'usr',
+                                    'input_path',
+                                    'working_path',
+                                    'output_path',
+                                    'num_cores',
+                                    'mem',
+                                    'ram',
+                                    'instanciated'])
 
-            assert isinstance (remote['id'], str)
+            self.assertIsInstance (remote['id'], str)
             assert re.fullmatch("^remote:"+self._re_uuid4[1:], remote['id'])
-            assert isinstance (remote['num_cores'], int)
+            self.assertIsInstance (remote['num_cores'], int)
             assert remote['num_cores'] > 0
-            assert isinstance (remote['mem'], str)
+            self.assertIsInstance (remote['mem'], str)
             assert re.fullmatch(self._re_mem, remote['mem'])
-            assert isinstance (remote['ram'], str)
+            self.assertIsInstance (remote['ram'], str)
             assert re.fullmatch(self._re_mem, remote['ram'])
-            assert isinstance (remote['instanciated'], bool)
-            assert not remote['instanciated']
+            self.assertIsInstance (remote['instanciated'], bool)
+            self.assertFalse(remote['instanciated'])
 
         resp = [xx['name'] for xx in self._client.query().app.remotes.post({"num_cores":2})['remotes']]
 
-        assert first not in resp
-        assert second in resp
+        self.assertNotIn(first, resp)
+        self.assertIn(second, resp)
 
         # delete by name
-        assert self._client.query().app.remote(first).delete ()
+        self.assertTrue(self._client.query().app.remote(first).delete ())
         # delete by id
-        assert self._client.query().app.remote(ids[1]).delete ()
+        self.assertTrue(self._client.query().app.remote(ids[1]).delete ())
 
         resp = self._client.query().app.remotes.get ()['remotes']
 
-        assert first not in resp
-        assert second not in resp
+        self.assertNotIn(first, resp)
+        self.assertNotIn(second, resp)
 
     def check_remote_cp_get_post (self, cloud_providor, creds=None):
 
@@ -319,7 +328,7 @@ class AppTestCase (unittest.TestCase):
         else:
             resp = self._client.query().app.remotes(cloud_providor).post (creds)
 
-        assert isinstance(resp, dict)
+        self.assertIsInstance(resp, dict)
 
         # Asserting only the first tenth elements
         max_element = min (len(resp), 10)
@@ -331,54 +340,54 @@ class AppTestCase (unittest.TestCase):
         for key in remotes:
             remote = remotes[key]
             assert re.fullmatch (self._re_remote_cp, key)
-            assert isinstance (remote, dict)
+            self.assertIsInstance (remote, dict)
             for kk in remote:
                 assert kk in ['cp', 'price', 'ram', 'cores']
             assert remote['cp'] in ['scw', 'aws']
-            assert isinstance(remote['price'], dict)
+            self.assertIsInstance(remote['price'], dict)
             for key in remote['price']:
-                assert key in ["AUD",
-                               "BRL",
-                               "BGN",
-                               "CAD",
-                               "CNY",
-                               "HRK",
-                               "CYP",
-                               "CZK",
-                               "DKK",
-                               "EEK",
-                               "EUR",
-                               "HKD",
-                               "HUF",
-                               "ISK",
-                               "IDR",
-                               "JPY",
-                               "KRW",
-                               "LVL",
-                               "LTL",
-                               "MYR",
-                               "MTL",
-                               "NZD",
-                               "NOK",
-                               "PHP",
-                               "PLN",
-                               "RON",
-                               "RUB",
-                               "SGD",
-                               "SKK",
-                               "SIT",
-                               "ZAR",
-                               "SEK",
-                               "CHF",
-                               "THB",
-                               "TRY",
-                               "GBP",
-                               "USD"]
-                assert isinstance (remote['price'][key], float)
-            assert isinstance(remote['ram'], str)
+                self.assertIn(key, ["AUD",
+                                    "BRL",
+                                    "BGN",
+                                    "CAD",
+                                    "CNY",
+                                    "HRK",
+                                    "CYP",
+                                    "CZK",
+                                    "DKK",
+                                    "EEK",
+                                    "EUR",
+                                    "HKD",
+                                    "HUF",
+                                    "ISK",
+                                    "IDR",
+                                    "JPY",
+                                    "KRW",
+                                    "LVL",
+                                    "LTL",
+                                    "MYR",
+                                    "MTL",
+                                    "NZD",
+                                    "NOK",
+                                    "PHP",
+                                    "PLN",
+                                    "RON",
+                                    "RUB",
+                                    "SGD",
+                                    "SKK",
+                                    "SIT",
+                                    "ZAR",
+                                    "SEK",
+                                    "CHF",
+                                    "THB",
+                                    "TRY",
+                                    "GBP",
+                                    "USD"])
+                self.assertIsInstance (remote['price'][key], float)
+            self.assertIsInstance(remote['ram'], str)
             assert re.fullmatch (self._re_mem, remote['ram'])
-            assert isinstance(remote['cores'], int)
-            assert remote['cores'] > 0
+            self.assertIsInstance(remote['cores'], int)
+            self.assertGreater(remote['cores'], 0)
 
     def test_remote_scw_get_post (self):
         return self.check_remote_cp_get_post ('scw')
@@ -392,7 +401,7 @@ class AppTestCase (unittest.TestCase):
                       "AWS_SECRET_ACCESS_KEY",
                       "AWS_S3_BUCKET",
                       "AWS_REGION"]:
-            assert field in os.environ
+            self.assertIn(field, os.environ)
 
         creds = {
             "aws": {
@@ -408,12 +417,12 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.datacenters("scw").get ()
 
-        assert isinstance (resp, dict)
-        assert 'datacenters' in resp
-        assert isinstance (resp['datacenters'], list)
+        self.assertIsInstance (resp, dict)
+        self.assertIn('datacenters', resp)
+        self.assertIsInstance (resp['datacenters'], list)
 
         for el in resp['datacenters']:
-            assert isinstance (el, str)
+            self.assertIsInstance (el, str)
 
         for dc in ["fr-par-1",
                    "fr-par-2",
@@ -423,22 +432,22 @@ class AppTestCase (unittest.TestCase):
                    "pl-waw-1",
                    "pl-waw-2"]:
 
-            assert dc in resp['datacenters']
+            self.assertIn(dc, resp['datacenters'])
 
     def test_info_get (self):
 
         resp = self._client.query().app.test.helloworld.get()
 
-        assert isinstance (resp, str)
+        self.assertIsInstance (resp, str)
 
     def process (self, body):
 
         resp = self._client.query().app.test.helloworld.run.post(body)
 
-        assert isinstance (resp, dict)
-        assert len(resp) == 1
-        assert 'id' in resp
-        assert isinstance (resp['id'], str)
+        self.assertIsInstance (resp, dict)
+        self.assertEqual(len(resp), 1)
+        self.assertIn('id', resp)
+        self.assertIsInstance (resp['id'], str)
         assert re.fullmatch (self._re_uuid4, resp['id'])
 
         puid = resp['id']
@@ -450,62 +459,67 @@ class AppTestCase (unittest.TestCase):
 
             resp = self._client.query().app.process(puid).get ()
 
-            assert isinstance (resp, dict)
+            self.assertIsInstance (resp, dict)
             for key in resp:
-                assert key in ['app',
-                               'domain',
-                               'endpoint',
-                               'id',
-                               'launched',
-                               'terminated',
-                               'expires',
-                               'body',
-                               'state',
-                               'outputs',
-                               'metrics',
-                               'quote',
-                               'agent',
-                               'errors',
-                               'tags']
+                self.assertIn(key, ['app',
+                                    'domain',
+                                    'endpoint',
+                                    'id',
+                                    'launched',
+                                    'terminated',
+                                    'expires',
+                                    'body',
+                                    'state',
+                                    'outputs',
+                                    'metrics',
+                                    'quote',
+                                    'agent',
+                                    'errors',
+                                    'tags'])
 
-            assert resp['app'] == 'helloworld'
-            assert resp['domain'] == 'test'
-            assert resp['endpoint'] == 'run'
-            assert isinstance (resp['id'], str)
+            self.assertEqual(resp['app'], 'helloworld')
+            self.assertEqual(resp['domain'], 'test')
+            self.assertEqual(resp['endpoint'], 'run')
+            self.assertIsInstance (resp['id'], str)
             assert re.fullmatch (self._re_uuid4, resp['id'])
-            assert isinstance (resp['launched'], str)
+            self.assertIsInstance (resp['launched'], str)
             datetime.datetime.fromisoformat (resp['launched'])
-            assert isinstance (resp['terminated'], str)
+            self.assertIsInstance (resp['terminated'], str)
             datetime.datetime.fromisoformat (resp['terminated'])
-            assert isinstance (resp['expires'], str)
+            self.assertIsInstance (resp['expires'], str)
             datetime.datetime.fromisoformat (resp['expires'])
-            assert isinstance (resp['state'], str)
-            assert isinstance (resp['agent'], str)
+            self.assertIsInstance (resp['state'], str)
+            self.assertIsInstance (resp['agent'], str)
 
-            assert resp['state'] in ['say_hello', 'upload', 'pending', 'waiting', 'dead', 'terminated']
+            self.assertIn(resp['state'], ['say_hello',
+                                          'upload',
+                                          'pending',
+                                          'waiting',
+                                          'dead',
+                                          'terminated'])
 
 
             if 'metrics' in resp:
                 for key in resp['metrics']:
-                    assert isinstance (resp['metrics'][key], dict)
+                    self.assertIsInstance (resp['metrics'][key], dict)
                     for subkey in resp['metrics'][key]:
-                        assert subkey in ['rate', 'datetime', 'metrics']
+                        self.assertIn(subkey, ['rate', 'datetime', 'metrics'])
                         if subkey == 'rate':
-                            assert isinstance(resp['metrics'][key]['rate'], int)
+                            self.assertIsInstance(resp['metrics'][key]['rate'], int)
                         if subkey == 'datetime':
                             datetime.datetime.fromisoformat (resp['metrics'][key]['datetime'])
                         if subkey == 'metrics':
-                            assert isinstance (resp['metrics'][key]['metrics'], list)
+                            self.assertIsInstance (resp['metrics'][key]['metrics'], list)
                             for item in resp['metrics'][key]['metrics']:
-                                assert isinstance (item, list)
-                                assert len(item) == 2
-                                assert isinstance (item[0], int) and isinstance (item[1], int)
+                                self.assertIsInstance (item, list)
+                                self.assertEqual(len(item), 2)
+                                self.assertIsInstance (item[0], int) and isinstance (item[1], int)
 
             if 'quote' in resp:
-                assert isinstance (resp['quote'], float)
+                self.assertIsInstance (resp['quote'], float)
 
             if 'errors' in resp:
-                assert isinstance (resp['errors'], str)
+                self.assertIsInstance (resp['errors'], str)
 
             return resp['state']
 
@@ -515,18 +529,18 @@ class AppTestCase (unittest.TestCase):
             time.sleep(1)
             resp = self._client.query().app.process.outputs(puid).get ()
 
-            assert isinstance (resp, dict)
+            self.assertIsInstance (resp, dict)
             for key in resp:
-                assert key in ['paging',
-                               'outputs']
+                self.assertIn(key, ['paging',
+                                    'outputs'])
 
             if 'outputs' in resp:
-                assert isinstance (resp['outputs'], list)
+                self.assertIsInstance (resp['outputs'], list)
                 for oo in resp['outputs']:
-                    assert "key" in oo
-                    assert "url" in oo
-                    assert isinstance (oo["key"], str)
-                    assert isinstance (oo["url"], str)
+                    self.assertIn("key", oo)
+                    self.assertIn("url", oo)
+                    self.assertIsInstance (oo["key"], str)
+                    self.assertIsInstance (oo["url"], str)
                     assert oo["url"].startswith('https://')
                     assert 's3' in oo["url"]
 
@@ -549,17 +563,17 @@ class AppTestCase (unittest.TestCase):
 
         resp = self._client.query().app.process(puid).get ()
 
-        assert resp['state'] == 'dead'
+        self.assertEqual(resp['state'], 'dead')
 
         check_outputs ()
 
         resp = self._client.query().app.process.cost(puid).get()
 
-        assert isinstance (resp, dict)
-        assert len(resp) == 1
-        assert 'cost' in resp
-        assert isinstance (resp['cost'], float)
-        assert resp['cost'] < 1.0
+        self.assertIsInstance (resp, dict)
+        self.assertEqual(len(resp), 1)
+        self.assertIn('cost', resp)
+        self.assertIsInstance (resp['cost'], float)
+        self.assertLess(resp['cost'], 1.0)
 
     def test_scaleway_process (self):
 
@@ -580,7 +594,7 @@ class AppTestCase (unittest.TestCase):
 ##                      "AWS_SECRET_ACCESS_KEY",
 ##                      "AWS_S3_BUCKET",
 ##                      "AWS_REGION"]:
-##            assert field in os.environ
+##            self.assertIn(field, os.environ)
 ##
 ##        creds = {
 ##            "aws": {

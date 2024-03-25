@@ -62,6 +62,7 @@ class client (object):
                               self.host,
                               session=self._make_requests_session(),
                               auth=HTTPBasicAuth(usermail,passwd),
+                              keep_track=keep_track
                            ).auth.login.get()
 
             self.token = resp['token']
@@ -94,7 +95,8 @@ class client (object):
         Use this method to perform a query to TCP API.
         '''
 
-        kwargs["keep_track"] = self.keep_track
+        if hasattr(self, "keep_track"):
+            kwargs["keep_track"] = self.keep_track
 
         api = clientAPI (self.host,
                          self.host,
