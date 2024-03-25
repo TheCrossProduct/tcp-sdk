@@ -26,7 +26,7 @@ class DataTestCase (unittest.TestCase):
 
         self._re_mem = "^[1-9][0-9]{0,32}(|.[0-9]+)(|b|Kb|Mb|Gb|Tb|Pb)$"
 
-    def test_z_check_uses (self):
+    def test_z_endpoints_coverage (self):
         uses = tcp.track_usage.TrackUsage().uses
 
         for key in uses:
