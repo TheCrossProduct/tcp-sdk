@@ -81,22 +81,22 @@ class AuthTestCase (unittest.TestCase):
                            'contact']
 
         self.assertIsInstance(resp["id"], str)
-        assert re.fullmatch(self._re_uuid4, resp["id"])
+        self.assertTrue(re.fullmatch(self._re_uuid4, resp["id"]))
         self.assertIsInstance(resp["mail"], str)
-        assert re.fullmatch(self._re_mail, resp["mail"])
+        self.assertTrue(re.fullmatch(self._re_mail, resp["mail"]))
         self.assertIsInstance(resp["created_on"], str)
         datetime.datetime.fromisoformat (resp['created_on'])
         self.assertIsInstance(resp["nbr_activations"], int)
-        assert resp["nbr_activations"] >= 0
+        self.assertGreaterEqual(resp["nbr_activations"], 0)
         self.assertIsInstance(resp["last_activation"], str)
         datetime.datetime.fromisoformat (resp['last_activation'])
         self.assertIsInstance(resp["group"], list)
         for group in resp["group"]:
             self.assertIsInstance(group, dict)
             for key in group.keys():
-                assert key in ["id", "name", "descr"]
+                self.assertIn(key, ["id", "name", "descr"])
             self.assertIsInstance(group["id"], str)
-            assert re.fullmatch(self._re_uuid4, group["id"])
+            self.assertTrue(re.fullmatch(self._re_uuid4, group["id"]))
             self.assertIsInstance(group["name"], str)
             self.assertIsInstance(group["descr"], str)
 
