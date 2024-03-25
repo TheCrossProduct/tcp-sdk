@@ -32,13 +32,14 @@ class clientResource (slumber.Resource):
 
         retry = 0
 
-        #if hasattr(self, "endpoints_usage"):
-        #    key = self._store["base_url"].replace(self._store["host"], "") +"+"+ args[0]
-        #    import re
-        #    for pattern in super(clientResource, self).endpoints_usage:
-        #        if re.fullmatch(pattern,key):
-        #            self.endpoints_usage[pattern] += 1
-        #            break
+        if self._store["keep_track"]:
+            from .track_usage import TrackUsage
+            key = self._store["base_url"].replace(self._store["host"], "") +"+"+ args[0]
+            import re
+            for pattern in TrackUsage().uses:
+                if re.fullmatch(pattern, key):
+                    TrackUsage().uses[pattern] += 1
+                    break
 
         while True:
 
@@ -82,8 +83,8 @@ class clientResource (slumber.Resource):
 class clientAPI (slumber.API):
     resource_class = clientResource
 
-    def __init__ (self, host=None, base_url=None, auth=None, format=None, append_slash=False, session=None, serializer=None, endpoints_usage={}):
+    def __init__ (self, host=None, base_url=None, auth=None, format=None, append_slash=False, session=None, serializer=None, keep_track=False):
 
         super ().__init__ (base_url, auth, format, append_slash, session, serializer)
         self._store.update ({"host": host})
-        #self.endpoints_usage = endpoints_usage
+        self._store.update ({"keep_track":keep_track})

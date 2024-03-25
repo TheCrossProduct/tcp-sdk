@@ -73,13 +73,9 @@ class client (object):
             self.token = os.environ['TCP_API_TOKEN']
 
         if keep_track:
+            from .track_usage import TrackUsage
             self.keep_track = True
-            self.endpoints_usage = {}
-
-            for ee in self._get_endpoints():
-                for mm in ee['methods']:
-                    key = f"{ee.enpoint}+{mm}"
-                    self.endpoints_usage[key] = 0
+            TrackUsage().init(self)
 
     def _make_requests_session (self):
 
@@ -98,8 +94,7 @@ class client (object):
         Use this method to perform a query to TCP API.
         '''
 
-        if hasattr(self, "keep_track"):
-            kwargs["endpoints_usage"] = self.endpoints_usage
+        kwargs["keep_track"] = self.keep_track
 
         api = clientAPI (self.host,
                          self.host,

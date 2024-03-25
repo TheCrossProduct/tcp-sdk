@@ -12,7 +12,7 @@ class AppTestCase (unittest.TestCase):
         self._test_account = os.environ["TCP_TEST_ACCOUNT"]
         self._test_passwd = os.environ["TCP_TEST_PASSWD"]
 
-        self._client = tcp.client (usermail=self._test_account, passwd= self._test_passwd)
+        self._client = tcp.client (usermail=self._test_account, passwd= self._test_passwd, keep_track=True)
 
         self._re_uuid4 = "^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
         self._re_ip = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)$"
@@ -22,6 +22,14 @@ class AppTestCase (unittest.TestCase):
         self._re_remote_cp = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
         self._re_remote_id = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
         self._re_instance_id = "^[0-9]+\-[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
+
+    def tearDown (self):
+
+        uses = tcp.track_usage.TrackUsage()
+
+        for key in uses:
+            if key.startswith("/app"):
+                assert uses[key] > 0
 
     def test_get (self):
         resp = self._client.query().app.get()
