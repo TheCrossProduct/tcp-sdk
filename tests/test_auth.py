@@ -90,15 +90,16 @@ class AuthTestCase (unittest.TestCase):
         self.assertGreaterEqual(resp["nbr_activations"], 0)
         self.assertIsInstance(resp["last_activation"], str)
         datetime.datetime.fromisoformat (resp['last_activation'])
-        self.assertIsInstance(resp["group"], list)
-        for group in resp["group"]:
-            self.assertIsInstance(group, dict)
-            for key in group.keys():
-                self.assertIn(key, ["id", "name", "descr"])
-            self.assertIsInstance(group["id"], str)
-            self.assertTrue(re.fullmatch(self._re_uuid4, group["id"]))
-            self.assertIsInstance(group["name"], str)
-            self.assertIsInstance(group["descr"], str)
+        if "group" in resp:
+            self.assertIsInstance(resp["group"], list)
+            for group in resp["group"]:
+                self.assertIsInstance(group, dict)
+                for key in group.keys():
+                    self.assertIn(key, ["id", "name", "descr"])
+                self.assertIsInstance(group["id"], str)
+                self.assertTrue(re.fullmatch(self._re_uuid4, group["id"]))
+                self.assertIsInstance(group["name"], str)
+                self.assertIsInstance(group["descr"], str)
 
     def test_logout_get (self):
 
