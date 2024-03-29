@@ -6,6 +6,8 @@ cffi
 charset-normalizer
 cryptography
 idna
+google-api-python-client
+google-auth-oauthlib
 matplotlib
 oauthlib
 prettytable

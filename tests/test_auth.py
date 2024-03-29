@@ -2,6 +2,8 @@ import datetime
 import unittest
 import tcp
 import re
+import requests
+import time
 
 class AuthTestCase (unittest.TestCase):
 
@@ -17,13 +19,14 @@ class AuthTestCase (unittest.TestCase):
         self._re_jwt = "^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$"
         self._re_uuid4 = "^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
         self._re_mail = "^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$"
+        self._re_url = "^(https?|ftp)://[^\s/$.?#].[^\s]*$"
 
-    def test_z_endpoints_coverage (self):
+
+    def test_zz_endpoints_coverage (self):
+
         uses = tcp.track_usage.TrackUsage().uses
-
-        for key in uses:
-            if key.startswith("^\/auth"):
-                self.assertGreater(uses[key], 0, f'Endpoint {key} has not been tested')
+        untested = [x for x in uses if uses[x]==0 and x.startswith("^\/auth")]
+        self.assertListEqual(untested, [], "Those endpoints remains untested")
 
     def test_login_get (self):
 
@@ -100,6 +103,38 @@ class AuthTestCase (unittest.TestCase):
                 self.assertTrue(re.fullmatch(self._re_uuid4, group["id"]))
                 self.assertIsInstance(group["name"], str)
                 self.assertIsInstance(group["descr"], str)
+
+    def test_reset_psw (self):
+
+        from .mail import checkOutMail
+
+        resp = self._client.query().auth.reset_password.post({'mail':self._test_account})
+
+        self.assertIsInstance(resp,dict)
+        mail=resp.get("mail")
+        self.assertTrue(re.fullmatch(self._re_mail, mail))
+        url_reset=resp.get("url_reset")
+        self.assertTrue(re.fullmatch(self._re_url, url_reset))
+        url_alert=resp.get("url_alert")
+        self.assertTrue(re.fullmatch(self._re_url, url_alert))
+
+        x = requests.get(url_reset)
+        match = re.search(r'action="(.*?)"', x.text)
+        self.assertTrue(match)
+        url_form = match.group(1)
+
+        body={
+            "newpsw": self._test_passwd,
+            "confirmpsw": self._test_passwd
+        }
+
+        self.assertTrue(requests.post(url_form,data=body))
+
+        time.sleep(5)
+
+        mails = checkOutMail(mto=self._test_account, subject="[TheCrossProduct] Link to reset your password 🔓")
+
+        self.assertGreater(len(mails), 0)
 
     def test_logout_get (self):
 
