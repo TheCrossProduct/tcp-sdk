@@ -421,12 +421,39 @@ class DataTestCase (unittest.TestCase):
                                self.default_dirs+['dirc/', 'dird/']),
             {'group':'unit_tests'})
 
+        self._client.query().data.remove.post({'uri':['test.txt'
+                                                      'dirc/',
+                                                      'dird/']})
+
 
     def test_list(self):
-        self.assertTrue(True)
+        # Setup
+        self._client.query().data.copy.post({"src":"hello.txt", "dest":"test.txt"})
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files+['test.txt'],
+                            self.default_dirs),
+            {'group':'unit_tests'})
+
+        self._client.query().data.copy.post({"src":["test.txt",
+                                                    "test.txt",
+                                                    "test.txt"],
+                                             "dest":["dira/test.txt",
+                                                     "dirb/dirc/testa.txt",
+                                                     "dirb/dirc/testb.txt"]})
+
         # Normal
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files+['test.txt',
+                                                   'dira/test.txt',
+                                                   'dirb/dirc/testa.txt',
+                                                   'dirb/dirc/testb.txt'],
+                               self.default_dirs+['dira/', 'dirb/']),
+            {'group':'unit_tests'})
 
         # Hierarchy
+        self.assertDictEqual(self._client.query().data.)
 
     def test_singlepart_upload(self):
         self.assertTrue(True)
@@ -597,22 +624,6 @@ class DataTestCase (unittest.TestCase):
 #        datetime.datetime.fromisoformat (resp["uploads"]["to"])
 #
 #        self.assertIn("files", resp["uploads"])
-#
-#    def test_dir_creation_removal (self):
-#        import time
-#
-#        resp=self._client.query().data.dir.post({"uri":"test_dir/"})
-#
-#        self.assertEqual(resp, b'')
-#
-#        self.assertEqual(self._client.query().data.exists.post({"uri":"test_dir/"}),b'')
-#
-#        self._client.query().data.remove.post({"uri":"test_dir/"})
-#
-#        time.sleep(2)
-#
-#        with self.assertRaises(tcp.exceptions.HttpClientError):
-#             self._client.query().data.exists.post({"uri":"test_dir/"})
 
 
 if __name__ == '__main__':
