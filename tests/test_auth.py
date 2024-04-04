@@ -21,6 +21,12 @@ class AuthTestCase (unittest.TestCase):
         self._re_mail = "^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$"
         self._re_url = "^(https?|ftp)://[^\s/$.?#].[^\s]*$"
 
+    def tearDown (self):
+
+        try:
+            self._client.query().auth.logout.get()
+        except:
+            pass
 
     def test_zz_endpoints_coverage (self):
 
@@ -130,7 +136,7 @@ class AuthTestCase (unittest.TestCase):
 
         self.assertTrue(requests.post(url_form,data=body))
 
-        time.sleep(5)
+        time.sleep(10)
 
         mails = checkOutMail(mto=self._test_account, subject="[TheCrossProduct] Link to reset your password 🔓")
 

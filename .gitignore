@@ -14,3 +14,5 @@ result-*
 __pycache__
 *.pyc
 *.egg-info/
+tests/credentials.json
+tests/token.json
