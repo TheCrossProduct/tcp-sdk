@@ -96,7 +96,7 @@ class DataTestCase (unittest.TestCase):
         resp = self._client.query().data.post({'groups':['unit_tests'], "personal":False})
         self.assertListEqual(resp, [])
 
-    def atest_dir (self):
+    def test_dir (self):
 
         self._client.query().data.dir.post({"uri":"toto/"})
 
@@ -156,7 +156,7 @@ class DataTestCase (unittest.TestCase):
         ref = self.construct_ref([],[])
         resp = retry_until_resp(self, self._client.query().data.post, ref, {"group":'unit_tests', "personal":False})
 
-    def atest_exists (self):
+    def test_exists (self):
 
         # Original setup and root
         self._client.query().data.exists.post({"uri":["hello.txt", "cloud.laz", "cloud.e57"]})
@@ -187,7 +187,7 @@ class DataTestCase (unittest.TestCase):
                                                       'unit_tests@dir/',
                                                       'unit_tests@dir/subdir/']})
 
-    def atest_move (self):
+    def test_move (self):
 
         # Empty src
         with self.assertRaises(tcp.exceptions.HttpClientError):
