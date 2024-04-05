@@ -31,8 +31,6 @@ class DataTestCase (unittest.TestCase):
 
     def construct_ref (self, files, dirs):
         from functools import cmp_to_key
-        if not files and not dirs:
-            return []
 
         ref = {
             'paging': {
@@ -52,10 +50,8 @@ class DataTestCase (unittest.TestCase):
                 return -1
             return 0
 
-        if files:
-            ref['files'] = sorted(files, key=cmp_to_key(cmp_uris))
-        if dirs:
-            ref['dirs'] = sorted(dirs, key=cmp_to_key(cmp_uris))
+        ref['files'] = sorted(files, key=cmp_to_key(cmp_uris))
+        ref['dirs'] = sorted(dirs, key=cmp_to_key(cmp_uris))
 
         return ref
 
@@ -94,7 +90,7 @@ class DataTestCase (unittest.TestCase):
         retry_until_resp(self, self._client.query().data.get, ref)
 
         resp = self._client.query().data.post({'groups':['unit_tests'], "personal":False})
-        self.assertListEqual(resp, [])
+        self.assertDictEqual(resp, self.construct_ref([],[]))
 
     def test_dir (self):
 
