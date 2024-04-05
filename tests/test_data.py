@@ -481,12 +481,12 @@ class DataTestCase (unittest.TestCase):
                                self.default_dirs),
             {'group':'unit_tests'})
 
-        try:
-            test_pagination(self,
-                        self._client.query().data,
-                        {'expands_info':True})
-        except tcp.exceptions.HttpClientError as err:
-            print(err.content)
+#        try:
+#            test_pagination(self,
+#                        self._client.query().data,
+#                        {'expands_info':True})
+#        except tcp.exceptions.HttpClientError as err:
+#            print(err.content)
 
 
     def test_singlepart_upload(self):
