@@ -2,16 +2,16 @@ import datetime
 import unittest
 import tcp
 import re
+import os
+import tempfile
+import filecmp
+import requests
 from .retry import retry, retry_until_resp
 from .pagination import test_pagination
 
 class DataTestCase (unittest.TestCase):
 
     def setUp (self):
-
-        import os
-
-        self._test_dir = '.'
 
         self._test_account = os.environ["TCP_TEST_ACCOUNT"]
         self._test_passwd = os.environ["TCP_TEST_PASSWD"]
@@ -401,13 +401,24 @@ class DataTestCase (unittest.TestCase):
         retry_until_resp(self,
             self._client.query().data.post,
             self.construct_ref(self.default_files+['test.txt',
+                                                   'dirb/testa.txt'],
+                               self.default_dirs+['dirb/']),
+           {'group':'unit_tests'})
+
+        # Array
+        self._client.query().data.copy.post({"src":["test.txt",
+                                                    "test.txt"],
+                                             "dest":["dira/testa.txt",
+                                                     "dirb/testb.txt"]})
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files+['test.txt',
                                                    'dira/testa.txt',
                                                    'dirb/testa.txt',
                                                    'dirb/testb.txt'],
                                self.default_dirs+['dira/', 'dirb/']),
             {'group':'unit_tests'})
 
-        # Array
         self._client.query().data.move.post({"src":["dira/","dirb/"], "dest":["dirc/","dird/"], "overwrite":False, "merge":False})
         retry_until_resp(self,
             self._client.query().data.post,
@@ -418,10 +429,14 @@ class DataTestCase (unittest.TestCase):
                                self.default_dirs+['dirc/', 'dird/']),
             {'group':'unit_tests'})
 
-        self._client.query().data.remove.post({'uri':['test.txt'
+        self._client.query().data.remove.post({'uri':['test.txt',
                                                       'dirc/',
                                                       'dird/']})
-
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files,
+                               self.default_dirs),
+            {'group':'unit_tests'})
 
     def test_list(self):
         # Setup
@@ -477,184 +492,174 @@ class DataTestCase (unittest.TestCase):
                                self.default_dirs),
             {'group':'unit_tests'})
 
-#        try:
-#            test_pagination(self,
-#                        self._client.query().data,
-#                        {'expands_info':True})
-#        except tcp.exceptions.HttpClientError as err:
-#            print(err.content)
+        try:
+            test_pagination(self,
+                        self._client.query().data,
+                        {'expands_info':True})
+        except tcp.exceptions.HttpClientError as err:
+            print(err.content)
 
+    def create_temp_file (self):
+        import uuid
 
-    def test_singlepart_upload(self):
-        self.assertTrue(True)
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write("This is a test. You can safely remove this file.".encode())
+            f.write(str(uuid.uuid4()).encode())
+            f.close()
+
+            return f.name
+
+    def create_empty_temp_file (self):
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.close()
+            return f.name
+
+    def destroy_temp_file (self, name):
+        os.unlink(name)
+        self.assertFalse(os.path.exists(name))
+
+    def test_download(self):
+
+        path = self.create_empty_temp_file()
+
+        self._client.download("hello.txt", path)
+
+        with open(path, 'r') as f:
+            self.assertEqual("\n".join(f.readlines()), "Hello world!\n")
+
+        self.destroy_temp_file(path)
 
     def test_multipart_upload(self):
-        self.assertTrue(True)
 
-#
-#    def test_post (self):
-#
-#        body={
-#            'items_per_page':2,
-#            'hierarchy':True,
-#            'suffix':['.txt'],
-#            'prefix':['test'],
-#            'since':'2020-01-01T00:00:00',
-#            'expands_info':True,
-#            'groups':['internal']
-#        }
-#        resp = self._client.query().data.post(body)
-#
-#        body={
-#            'expands_info':True,
-#        }
-#        resp = self._client.query().data.post(body)
-#        self.assertIn('paging', resp)
-#        self.assertIsInstance(resp, dict)
-#        self.assertIn('files', resp)
-#        self.assertIsInstance(resp['files'], list)
-#
-#        self.assertIn('user_id', resp['files'][0])
-#
-#        self.assertIn('path', resp['files'][0])
-#        self.assertIsInstance(resp['files'][0]['path'],str)
-#
-#        self.assertIn('created', resp['files'][0])
-#        self.assertIsInstance(resp['files'][0]['created'],str)
-#        datetime.datetime.fromisoformat (resp['files'][0]['created'])
-#
-#        self.assertIn('last_modified', resp['files'][0])
-#        self.assertIsInstance(resp['files'][0]['last_modified'],str)
-#        datetime.datetime.fromisoformat (resp['files'][0]['last_modified'])
-#
-#        self.assertIn('size', resp['files'][0])
-#        self.assertIsInstance(resp['files'][0]['size'],int)
-#
-#        self.assertIn('md5sum', resp['files'][0])
-#        self.assertIsInstance(resp['files'][0]['md5sum'],str)
-#
-#        self.assertIn('download_count', resp['files'][0])
-#        self.assertIsInstance(resp['files'][0]['download_count'],int)
-#
-#    def test_get_next_previous (self):
-#
-#        import requests,json
-#        resp = self._client.query().data.post({'items_per_page':2})
-#        # This test suppose to have more than 2 files in this account
-#        self.assertIn('paging', resp)
-#        self.assertIn('next', resp['paging'])
-#
-#        url=resp['paging']['next']
-#        response=requests.get(url,headers={'authorization':'bearer '+self._client.token})
-#        resp=json.loads(response.text)
-#
-#        self.assertTrue('files' in resp or 'dirs' in resp)
-#        if "files" in resp:
-#            self.assertIsInstance(resp['files'], list)
-#        if 'dirs' in resp:
-#            self.assertIsInstance(resp['dirs'], list)
-#
-#        self.assertIn('previous', resp['paging'])
-#        url=resp['paging']['previous']
-#        response=requests.get(url,headers={'authorization':'bearer '+self._client.token})
-#        resp=json.loads(response.text)
-#
-#        self.assertTrue('files' in resp or 'dirs' in resp)
-#        if "files" in resp:
-#            self.assertIsInstance(resp['files'], list)
-#        if 'dirs' in resp:
-#            self.assertIsInstance(resp['dirs'], list)
-#
-#    def test_move (self) :
-#        import time
-#        self._client.query().data.move.post({'src':'filetest.txt','dest':'filetest-move.txt'})
-#        time.sleep(2)
-#        self._client.query().data.move.post({'src':'filetest-move.txt','dest':'filetest.txt'})
-#
-#    def test_download_upload_delete (self):
-#        import os
-#        import filecmp
-#        import time
-#
-#        file_src = os.path.join (self._test_dir, 'test.txt')
-#        file_dest = os.path.join (self._test_dir, 'test-downloaded.txt')
-#
-#        with open(file_src, 'w') as f:
-#            f.write ("This is a test. You can safely remove this file.")
-#
-#        self._client.upload (file_src, 'test.txt')
-#        time.sleep(2)
-#
-#        self.assertEqual(self._client.query().data.exists.post({"uri":"test.txt"}),b'')
-#
-#        self._client.download ('test.txt', file_dest)
-#        time.sleep(2)
-#        self.assertTrue(os.path.exists(file_dest))
-#
-#        filecmp.cmp (file_src, file_dest)
-#        os.remove (file_src)
-#        os.remove (file_dest)
-#
-#        self._client.query().data.remove.post({'uri':"test.txt"})
-#        time.sleep(2)
-#
-#        with self.assertRaises(tcp.exceptions.HttpClientError):
-#           self._client.query().data.exists.post({"uri":"test.txt"})
-#
-#    def test_single_part (self):
-#
-#        import requests
-#        import os
-#        import time
-#        import filecmp
-#
-#        file_src = os.path.join (self._test_dir, 'test.txt')
-#        file_dest = os.path.join (self._test_dir, 'test-downloaded.txt')
-#
-#        resp=self._client.query().data.upload.singlepart.post({'uri':'test-singlepart.txt'})
-#        self.assertIn('url', resp)
-#
-#        with open(file_src, 'w') as f:
-#            f.write ("This is a test. You can safely remove this file.")
-#
-#        requests.put(resp['url'], file_src)
-#        self._client.query().data.upload.singlepart.complete.post({'uri':'test-singlepart.txt'})
-#
-#        time.sleep(2)
-#
-#        self.assertEqual(self._client.query().data.exists.post({"uri":"test-singlepart.txt"}),b'')
-#
-#        self._client.download ('test-singlepart.txt', file_dest)
-#        time.sleep(2)
-#        self.assertTrue(os.path.exists(file_dest))
-#
-#        filecmp.cmp (file_src, file_dest)
-#        os.remove (file_src)
-#        os.remove (file_dest)
-#
-#        self._client.query().data.remove.post({'uri':"test-singlepart.txt"})
-#        time.sleep(2)
-#
-#        with self.assertRaises(tcp.exceptions.HttpClientError):
-#             self._client.query().data.exists.post({"uri":"test-singlepart.txt"})
-#
-#    def test_summary (self):
-#
-#        resp=self._client.query().data.summary.get()
-#
-#        for field in ['users', 'groups']:
-#            self.assertIn(field, resp)
-#            for key in resp[field]:
-#                self.assertTrue(re.fullmatch (self._re_mem, resp[field][key]))
-#
-#        self.assertIn("uploads", resp)
-#        self.assertIn("from", resp["uploads"])
-#        datetime.datetime.fromisoformat (resp["uploads"]["from"])
-#        self.assertIn("to", resp["uploads"])
-#        datetime.datetime.fromisoformat (resp["uploads"]["to"])
-#
-#        self.assertIn("files", resp["uploads"])
+        file_src = self.create_temp_file()
+        self._client.upload(file_src, "test.txt")
 
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files+['test.txt'],
+                               self.default_dirs),
+            {'group':'unit_tests'})
+
+        file_dest = self.create_empty_temp_file()
+        self._client.download ('test.txt', file_dest)
+
+        self.assertTrue(os.path.exists(file_dest))
+
+        filecmp.cmp (file_src, file_dest)
+        self.destroy_temp_file (file_src)
+        self.destroy_temp_file (file_dest)
+        self._client.query().data.remove.post({'uri':"test.txt"})
+
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files,
+                               self.default_dirs),
+            {'group':'unit_tests'})
+
+    def test_singlepart_upload(self):
+
+        file_src = self.create_temp_file()
+
+        resp = self._client.query().data.upload.singlepart.post({'uri':'test.txt'})
+        self.assertIn('url', resp)
+        requests.put(resp['url'], data=file_src)
+        self._client.query().data.upload.singlepart.complete.post({'uri':'test.txt'})
+
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files+['test.txt'],
+                               self.default_dirs),
+            {'group':'unit_tests'})
+
+        file_dest = self.create_empty_temp_file()
+        self._client.download ('test.txt', file_dest)
+
+
+        self.assertTrue(os.path.exists(file_dest))
+
+        filecmp.cmp (file_src, file_dest)
+        self.destroy_temp_file (file_src)
+        self.destroy_temp_file (file_dest)
+        self._client.query().data.remove.post({'uri':"test.txt"})
+
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files,
+                               self.default_dirs),
+            {'group':'unit_tests'})
+
+    def test_multipart_upload_(self):
+
+        file_src = self.create_temp_file()
+        file_size = os.path.getsize(file_src)
+
+        resp = self._client.query().data.upload.multipart.post({'uri':'test.txt', 'size':file_size})
+        self.assertIn('upload_id', resp)
+        self.assertIn('parts', resp)
+        self.assertIn('part_size', resp)
+
+        completed_parts = []
+
+        with open(file_src, 'rb') as f:
+            for part_no, part_url in enumerate(resp['parts']):
+                file_data = f.read(resp['part_size'])
+                part_resp = requests.put(part_url, data=file_data)
+                self.assertEqual(200, part_resp.status_code)
+                completed_parts.append(
+                    {
+                        "ETag": part_resp.headers['ETag'].replace('"',''),
+                        "PartNumber": part_no+1
+                    }
+                )
+
+        self._client.query().data.upload.multipart.complete.post(
+            {
+                'uri':'test.txt',
+                'upload_id': resp['upload_id'],
+                'parts': completed_parts
+             })
+
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files+['test.txt'],
+                               self.default_dirs),
+            {'group':'unit_tests'})
+
+        file_dest = self.create_empty_temp_file()
+        self._client.download ('test.txt', file_dest)
+
+
+        self.assertTrue(os.path.exists(file_dest))
+
+        filecmp.cmp (file_src, file_dest)
+        self.destroy_temp_file (file_src)
+        self.destroy_temp_file (file_dest)
+        self._client.query().data.remove.post({'uri':"test.txt"})
+
+        retry_until_resp(self,
+            self._client.query().data.post,
+            self.construct_ref(self.default_files,
+                               self.default_dirs),
+            {'group':'unit_tests'})
+
+    def test_multipart_upload_abort(self):
+
+        file_src = self.create_temp_file()
+        file_size = os.path.getsize(file_src)
+
+        resp = self._client.query().data.upload.multipart.post({'uri':'test.txt', 'size':file_size})
+        self.assertIn('upload_id', resp)
+        self.assertIn('parts', resp)
+        self.assertIn('part_size', resp)
+
+        self._client.query().data.upload.multipart.abort.post(
+            {
+                'uri':'test.txt',
+                'upload_id': resp['upload_id'],
+             })
+
+        with self.assertRaises(tcp.exceptions.HttpClientError):
+            self._client.query().data.exists.post({"uri":"test.txt"})
 
 if __name__ == '__main__':
     unittest.main()

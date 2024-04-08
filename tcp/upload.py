@@ -5,7 +5,7 @@ def _upload_part (args):
     src_local, part_size = args[2][0], args[2][1]
 
     import requests
-    
+
     file_data = None
 
     with open(src_local, 'rb') as f:
@@ -20,6 +20,6 @@ def _upload_part (args):
 
 
     if resp.status_code != 200:
-        return False, {'url': url, 'PartNumber': part_no} 
+        return False, {'url': url, 'PartNumber': part_no}
 
-    return True, {'ETag': resp.headers['ETag'].replace('"', ''), 'PartNumber': part_no} 
+    return True, {'ETag': resp.headers['ETag'].replace('"', ''), 'PartNumber': part_no}
