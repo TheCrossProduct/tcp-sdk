@@ -152,5 +152,17 @@ class AuthTestCase (unittest.TestCase):
             assert err.response.status_code == 401
             pass
 
+    def test_tokens_delete (self):
+
+        nbr_clients = 10
+
+        clients = [tcp.client (usermail=self._test_account, passwd= self._test_passwd, keep_track=False) for _x in range(nbr_clients)]
+
+        self._client.query().auth.tokens.delete()
+
+        for client in clients:
+            with self.assertRaises(tcp.exceptions.InvalidCredentials):
+                client.query().auth.get()
+
 if __name__ == '__main__':
     unittest.main()

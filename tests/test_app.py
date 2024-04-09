@@ -23,12 +23,15 @@ class AppTestCase (unittest.TestCase):
         self._re_remote_id = "^(scw|aws):[a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+:[\.a-zA-Z0-9_-]+$"
         self._re_instance_id = "^[0-9]+\-[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
 
-    def test_z_endpoints_coverage (self):
-        uses = tcp.track_usage.TrackUsage().uses
+    def tearDown (self):
 
-        for key in uses:
-            if key.startswith("^\/app"):
-                self.assertGreater(uses[key], 0, f'Endpoint {key} has not been tested')
+        self._client.query().auth.logout.get()
+
+    def test_z_endpoints_coverage (self):
+
+        uses = tcp.track_usage.TrackUsage().uses
+        untested = [x for x in uses if uses[x]==0 and x.startswith("^\/app")]
+        self.assertListEqual(untested, [], "Those endpoints remains untested")
 
     def test_get (self):
         resp = self._client.query().app.get()
