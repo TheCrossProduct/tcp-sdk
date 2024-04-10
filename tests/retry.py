@@ -17,14 +17,16 @@ def retry(test_case, func, *args, **kwargs):
 
 def retry_until_resp(test_case, func, ref, *args, **kwargs):
 
+    resp = None
+
     for ii in range(nbr_of_tries):
 
         try:
             resp = func(*args, **kwargs)
             if resp == ref:
-                return resp
+               continue
         except tcp.exceptions.HttpClientError as err:
             time.sleep(delay)
 
+    test_case.assertNotEqual(resp, None)
     test_case.assertDictEqual(resp, ref)
-    return resp

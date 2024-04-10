@@ -443,7 +443,7 @@ class client (object):
         except slumber.exceptions.SlumberHttpBaseException as err:
             raise exceptions.DownloadError (str(err), err.__dict__)
 
-        url = resp['url']
+        url = resp[src_s3]
 
         for try_num in range(num_tries):
 
