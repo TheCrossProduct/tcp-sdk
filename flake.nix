@@ -2,46 +2,35 @@
   description = "TCP python SDK.";
 
   inputs = {
-     nixpkgs.follows = "machnix/nixpkgs";
+     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+     poetry2nix = {
+         url = "github:nix-community/poetry2nix";
+         inputs.nixpkgs.follows = "nixpkgs";
+     };
   };
 
   outputs = { self, 
               nixpkgs, 
               utils, 
-              machnix}: utils.lib.eachDefaultSystem (system: 
+              poetry2nix}: utils.lib.eachDefaultSystem (system: 
     let
 
-      requirements = builtins.readFile ./requirements.txt;
-      requirements-dev = builtins.readFile ./requirements.txt.dev;
-
       version = self.lastModifiedDate;
-
       nixpkgs_ = nixpkgs.legacyPackages.${system};
+      inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryEnv;
+      inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryApplication;
 
     in
     rec {
-  
 
       packages = rec {
+        
+        app = mkPoetryApplication { projectDir = ./.; };
 
-        module = machnix.lib.${system}.buildPythonPackage  
+        py_interpreter = mkPoetryEnv
         {
-          python="python3Full";
-          pname = "tcp-sdk";
-          src = ./.;
-          inherit version;
-          inherit requirements;
-          doCheck = false;
-          ignoreCollisions=true; 
-          providers={notebook="nixpkgs";};
-        };
-
-        pyInterpreter = machnix.lib.${system}.mkPython
-        {
-          python="python3Full";
-          inherit requirements;
-          packagesExtra = [module];
-          providers={notebook="nixpkgs";};
+          projectDir = self;
+          extras = ["ipython"];
         };
 
         test_files = nixpkgs_.stdenv.mkDerivation { 
@@ -55,18 +44,14 @@
 
         tests = nixpkgs_.writeShellScript "tests_sdk.sh" ''
               set source
-              ${pyInterpreter}/bin/python -m unittest discover -s ${test_files}
+              ${py_interpreter}/bin/python -m unittest discover -s ${test_files}
             '';
 
-        default = module;
+        default = app;
       };
 
-      devShells.default = machnix.lib.${system}.mkPythonShell {
-        python="python3Full";
-        requirements = requirements-dev+"\nipython"; 
-        ignoreCollisions=true; 
-        packagesExtra = [self.packages.${system}.module];
-        providers={notebook="nixpkgs";};
+      devShells.default = nixpkgs_.mkShell {
+          buildInputs = [self.packages.${system}.py_interpreter]; 
       };
   
     });

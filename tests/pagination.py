@@ -1,4 +1,4 @@
-def test_pagination(test_case,
+def check_pagination(test_case,
                     endpoint,
                     init_body):
 

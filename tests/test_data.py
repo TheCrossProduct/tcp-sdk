@@ -9,7 +9,7 @@ import filecmp
 import requests
 import socketio
 from .retry import retry, retry_until_resp
-from .pagination import test_pagination
+from .pagination import check_pagination
 
 class DataTestCase (unittest.TestCase):
 
@@ -22,8 +22,8 @@ class DataTestCase (unittest.TestCase):
                                    passwd= self._test_passwd,
                                    keep_track=True)
 
-        self._sock = socketio.Client()
-        self._sock.connect(os.environ["TCP_WEBSOCKET_HOST"], transports=['websocket'])
+        self._sock = socketio.SimpleClient()
+        self._sock.connect(os.environ["TCP_WEBSOCKET_HOST"], transports=['websocket'], headers={"Authorization":f"Bearer {self._client.token}"})
 
         self._re_mem = "^[1-9][0-9]{0,32}(|.[0-9]+)(|b|Kb|Mb|Gb|Tb|Pb)$"
 
@@ -62,13 +62,11 @@ class DataTestCase (unittest.TestCase):
         return ref
 
     def test_z_endpoints_coverage (self):
-        return 0
         uses = tcp.track_usage.TrackUsage().uses
         untested = [x for x in uses if uses[x]==0 and x.startswith("^\/data")]
         self.assertListEqual(untested, [], "Those endpoints remains untested")
 
     def test_a_initial_state (self):
-        return 0
 
         resp = self._client.query().data.get()
 
@@ -100,7 +98,6 @@ class DataTestCase (unittest.TestCase):
         self.assertDictEqual(resp, self.construct_ref([],[]))
 
     def test_dir (self):
-        return 0
 
         self._client.query().data.dir.post({"uri":"toto/"})
 
@@ -161,7 +158,6 @@ class DataTestCase (unittest.TestCase):
         resp = retry_until_resp(self, self._client.query().data.post, ref, {"group":'unit_tests', "personal":False})
 
     def test_exists (self):
-        return 0
 
         # Original setup and root
         self._client.query().data.exists.post({"uri":["hello.txt", "cloud.laz", "cloud.e57"]})
@@ -193,7 +189,6 @@ class DataTestCase (unittest.TestCase):
                                                       'unit_tests@dir/subdir/']})
 
     def test_move (self):
-        return 0
 
         # Empty src
         with self.assertRaises(tcp.exceptions.HttpClientError):
@@ -449,7 +444,6 @@ class DataTestCase (unittest.TestCase):
             {'group':'unit_tests'})
 
     def test_list(self):
-        return 0
 
         # Setup
         self._client.query().data.copy.post({"src":"hello.txt", "dest":"test.txt"})
@@ -505,7 +499,7 @@ class DataTestCase (unittest.TestCase):
             {'group':'unit_tests'})
 
         try:
-            test_pagination(self,
+            check_pagination(self,
                         self._client.query().data,
                         {'expands_info':True})
         except tcp.exceptions.HttpClientError as err:
@@ -531,7 +525,6 @@ class DataTestCase (unittest.TestCase):
         self.assertFalse(os.path.exists(name))
 
     def test_download(self):
-        return 0
 
         path = self.create_empty_temp_file()
 
@@ -549,25 +542,35 @@ class DataTestCase (unittest.TestCase):
             "uri": "hello.txt"
         }
 
+        msg_id = str(uuid.uuid4())
+
         self._sock.emit('backend_message', {
                          'action':action,
-                         'id':str(uuid.uuid4()),
+                         'id':msg_id,
                          'body':body})
 
-        has_received_something = False
-        self._sock.on('data_download_post')
-        def check_if_ws_msg_correct(data):
-            self.assertIsInstance(data, dict)
-            self.assertIn("status_code", data)
-            self.assertIn("dataonse", data)
-            self.assertIsInstance(data['response'], dict)
-            self.assertIn("hello.txt", data['response'])
-            has_received_something = True
+        resp = self._sock.receive(10)
+        self.assertListEqual(resp, ['info', {'message': 'Connection to TCP Websocket'}])
 
-        self._sock.sleep(10)
+        resp = self._sock.receive(10)
+        event_name, data = resp[0], json.loads(resp[1])
+
+        self.assertEqual(event_name, "json")
+        self.assertIsInstance(data, dict)
+        self.assertListEqual(list(data.keys()),
+                             ['action',
+                              'state',
+                              'response',
+                              'id'])
+        self.assertEqual(data['action'],"data_download_post")
+        self.assertEqual(data['state'],"done")
+        self.assertEqual(data['id'],msg_id)
+        self.assertIn("hello.txt", data['response'])
+        self.assertIn("md5sum", data['response'])
+
+        self._sock.disconnect()
 
     def test_multipart_upload(self):
-        return 0
 
         file_src = self.create_temp_file()
         self._client.upload(file_src, "test.txt")
@@ -595,7 +598,6 @@ class DataTestCase (unittest.TestCase):
             {'group':'unit_tests'})
 
     def test_singlepart_upload(self):
-        return 0
 
         file_src = self.create_temp_file()
 
@@ -628,7 +630,6 @@ class DataTestCase (unittest.TestCase):
             {'group':'unit_tests'})
 
     def test_multipart_upload_(self):
-        return 0
 
         file_src = self.create_temp_file()
         file_size = os.path.getsize(file_src)
@@ -683,8 +684,6 @@ class DataTestCase (unittest.TestCase):
             {'group':'unit_tests'})
 
     def test_multipart_upload_abort(self):
-        return 0
-
         file_src = self.create_temp_file()
         file_size = os.path.getsize(file_src)
 
