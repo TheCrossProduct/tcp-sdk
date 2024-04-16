@@ -2,11 +2,7 @@
   description = "TCP python SDK.";
 
   inputs = {
-     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-     poetry2nix = {
-         url = "github:nix-community/poetry2nix";
-         inputs.nixpkgs.follows = "nixpkgs";
-     };
+     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, 
@@ -19,13 +15,17 @@
       nixpkgs_ = nixpkgs.legacyPackages.${system};
       inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryEnv;
       inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryApplication;
+      inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) defaultPoetryOverrides;
+
 
     in
     rec {
 
       packages = rec {
         
-        app = mkPoetryApplication { projectDir = ./.; };
+        app = mkPoetryApplication { 
+            projectDir = ./.; 
+        };
 
         py_interpreter = mkPoetryEnv
         {
