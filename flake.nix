@@ -13,10 +13,21 @@
 
       version = self.lastModifiedDate;
       nixpkgs_ = nixpkgs.legacyPackages.${system};
+      poetry = poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; };
       inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryEnv;
       inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryApplication;
-      inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) defaultPoetryOverrides;
 
+      pypkgs-build-requirements = {
+        scaleway = [ "poetry" ];
+        scaleway-core = [ "poetry" ];
+      };
+      overrides = poetry.defaultPoetryOverrides.extend (self: super:
+        builtins.mapAttrs (package: build-requirements:
+          (builtins.getAttr package super).overridePythonAttrs (old: {
+            buildInputs = (old.buildInputs or [ ]) ++ (builtins.map (pkg: if builtins.isString pkg then builtins.getAttr pkg super else pkg) build-requirements);
+          })
+        ) pypkgs-build-requirements
+      );
 
     in
     rec {
@@ -25,6 +36,7 @@
         
         app = mkPoetryApplication { 
             projectDir = ./.; 
+            inherit overrides;
         };
 
         py_interpreter = mkPoetryEnv
@@ -51,7 +63,7 @@
       };
 
       devShells.default = nixpkgs_.mkShell {
-          buildInputs = [self.packages.${system}.py_interpreter]; 
+          buildInputs = [self.packages.${system}.app.dependencyEnv]; 
       };
   
     });
