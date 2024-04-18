@@ -37,6 +37,7 @@
         app = mkPoetryApplication { 
             projectDir = ./.; 
             inherit overrides;
+            extras = [];
         };
 
         py_interpreter = mkPoetryEnv
