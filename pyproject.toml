@@ -20,7 +20,6 @@ pytest = "^8.1.1"
 google-api-python-client = "^2.125.0"
 google-auth-oauthlib = "^1.2.0"
 python-socketio = "^5.11.2"
-notebook = "7.0.0"
 
 [tool.poetry.extras]
 ipython = ["ipython"]
