@@ -116,8 +116,10 @@ class client (object):
                          serializer=Serializer(default="json",
                                                serializers=[JsonSerializer(),
                                                             PlainTextSerializer()]))
-
-        return api._get_resource(**api._store).get()['routes']
+        routes = api._get_resource(**api._store).get()
+        if isinstance(routes, dict):
+            return api._get_resource(**api._store).get()['routes']
+        return api._get_resource(**api._store).get()
 
     def help (self, app=None):
         '''
