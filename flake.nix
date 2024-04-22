@@ -40,7 +40,7 @@
             extras = [];
         };
 
-        py_interpreter = mkPoetryEnv
+        py_env = mkPoetryEnv
         {
           projectDir = self;
           extras = ["ipython"];
@@ -57,14 +57,14 @@
 
         tests = nixpkgs_.writeShellScript "tests_sdk.sh" ''
               set source
-              ${py_interpreter}/bin/python -m unittest discover -s ${test_files}
+              ${py_env}/bin/python -m unittest discover -s ${test_files}
             '';
 
         default = app;
       };
 
       devShells.default = nixpkgs_.mkShell {
-          buildInputs = [self.packages.${system}.app.dependencyEnv]; 
+          buildInputs = [self.packages.${system}.py_env]; 
       };
   
     });
