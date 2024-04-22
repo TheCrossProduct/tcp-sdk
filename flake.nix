@@ -14,8 +14,8 @@
       version = self.lastModifiedDate;
       nixpkgs_ = nixpkgs.legacyPackages.${system};
       poetry = poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; };
-      inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryEnv;
-      inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = nixpkgs_; }) mkPoetryApplication;
+      inherit (poetry) mkPoetryEnv;
+      inherit (poetry) mkPoetryApplication;
 
       pypkgs-build-requirements = {
         scaleway = [ "poetry" ];
