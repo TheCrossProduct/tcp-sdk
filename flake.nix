@@ -31,6 +31,7 @@
 
     in
     rec {
+      formatter = nixpkgs_.nixpkgs-fmt;
 
       packages = rec {
         
