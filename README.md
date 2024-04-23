@@ -2,7 +2,7 @@
 TCP python SDK 
 ==============
 
-tcp-sdk is a Python module that provides a convenient object-oriented interface to TCP API. It acts as a wrapper around `slumber <https://github.com/samgiles/slumber>`_.
+tcp-sdk is a Python module that provides a convenient object-oriented interface to TCP API. It acts as a wrapper around [slumber](https://github.com/samgiles/slumber).
 
 QuickStart
 ----------
