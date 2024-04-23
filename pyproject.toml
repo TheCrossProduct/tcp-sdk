@@ -4,7 +4,7 @@ version = "1.0.26"
 description = "Python SDK to query The Cross Product API."
 authors = ["Théodore Chabardès <theodore.chabardes@thecrossproduct.com>"]
 license = "Proprietary License"
-readme = "README.rst"
+readme = "README.md"
 packages = [{include = "tcp"}]
 
 [tool.poetry.dependencies]
