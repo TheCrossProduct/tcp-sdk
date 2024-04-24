@@ -112,7 +112,7 @@ class AuthTestCase (unittest.TestCase):
 
     def test_reset_psw (self):
 
-        from .mail import checkOutMail
+        from .mail import check_out_mail
 
         resp = self._client.query().auth.reset_password.post({'mail':self._test_account})
 
@@ -138,7 +138,7 @@ class AuthTestCase (unittest.TestCase):
 
         time.sleep(10)
 
-        mails = checkOutMail(mto=self._test_account, subject="[TheCrossProduct] Link to reset your password 🔓")
+        mails = check_out_mail(mto=self._test_account, subject="[TheCrossProduct] Link to reset your password 🔓")
 
         self.assertGreater(len(mails), 0)
 

@@ -14,7 +14,7 @@ import pathlib
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.modify']
 
-def checkOutMail(mfrom:str="contact@thecrossproduct.com", mto:str="api.tester@thecrossproduct.com", subject:str="test@helloworld is over.", delay="1h"):
+def check_out_mail(mfrom:str="contact@thecrossproduct.com", mto:str="api.tester@thecrossproduct.com", subject:str="test@helloworld is over.", delay="1h"):
 
     creds = None
     token_path = os.path.join(pathlib.Path(__file__).parent.resolve(),"token.json")

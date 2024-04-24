@@ -12,7 +12,9 @@ class AppTestCase (unittest.TestCase):
         self._test_account = os.environ["TCP_TEST_ACCOUNT"]
         self._test_passwd = os.environ["TCP_TEST_PASSWD"]
 
-        self._client = tcp.client (usermail=self._test_account, passwd= self._test_passwd, keep_track=True)
+        self._client = tcp.client (usermail=self._test_account,
+                                   passwd= self._test_passwd,
+                                   keep_track=True)
 
         self._re_uuid4 = "^[0-9a-f]{8}\-[0-9a-f]{4}\-4[0-9a-f]{3}\-[89ab][0-9a-f]{3}\-[0-9a-f]{12}$"
         self._re_ip = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)$"

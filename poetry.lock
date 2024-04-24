@@ -1071,6 +1071,22 @@ files = [
 ]
 
 [[package]]
+name = "websocket-client"
+version = "1.8.0"
+description = "WebSocket client for Python with low level API options"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "websocket_client-1.8.0-py3-none-any.whl", hash = "sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526"},
+    {file = "websocket_client-1.8.0.tar.gz", hash = "sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da"},
+]
+
+[package.extras]
+docs = ["Sphinx (>=6.0)", "myst-parser (>=2.0.0)", "sphinx-rtd-theme (>=1.1.0)"]
+optional = ["python-socks", "wsaccel"]
+test = ["websockets"]
+
+[[package]]
 name = "wsproto"
 version = "1.2.0"
 description = "WebSockets state-machine based protocol implementation"
@@ -1090,4 +1106,4 @@ ipython = ["ipython"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "b488f8ca5231a94b17b2b08fa35425347f106058a2b9e31b49bf5ec692c87fc9"
+content-hash = "e3fda0ad0c12e2b06b3ec06741c4ca01ff887f515a09f6bb313a03cc946a2938"
