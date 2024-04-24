@@ -94,7 +94,6 @@ class AppTestCase (unittest.TestCase):
             self.assertIsInstance (el['body'], dict)
             self.assertIsInstance (el['state'], str)
 
-
     def test_instances_get (self):
 
         resp = self._client.query().app.instances.get()

@@ -1,6 +1,13 @@
 def check_pagination(test_case,
                     endpoint,
-                    init_body):
+                    init_body,
+                    endpoint_next=None,
+                    endpoint_previous=None):
+
+    if not endpoint_next:
+        endpoint_next = endpoint.next
+    if not endpoint_previous:
+        endpoint_previous = endpoint.previous
 
     resp = endpoint.post (init_body)
 
@@ -28,13 +35,13 @@ def check_pagination(test_case,
 
         test_case.assertIn("next", resp['paging'])
         token = resp['paging']['next'].split('/')[-1]
-        resp = endpoint.next (token).get()
+        resp = endpoint_next (token).get()
         next_nb_items = sum([len(resp[tt]) for tt in tablenames if tt in resp])
         test_case.assertGreaterEqual (nb_items, 1)
 
         test_case.assertIn("previous", resp['paging'])
         token = resp['paging']['previous'].split('/')[-1]
-        resp = endpoint.previous (token).get()
+        resp = endpoint_previous (token).get()
         previous_nb_items = sum([len(resp[tt]) for tt in tablenames if tt in resp])
         test_case.assertGreaterEqual (nb_items, previous_nb_items)
 
