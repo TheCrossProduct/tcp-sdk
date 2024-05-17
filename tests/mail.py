@@ -11,6 +11,7 @@ import logging
 import requests
 from datetime import datetime, timedelta
 import pathlib
+import os
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -25,10 +26,16 @@ def check_out_mail(
     delay="1h",
 ):
     creds = None
-    token_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "token.json")
-    credentials_path = os.path.join(
-        pathlib.Path(__file__).parent.resolve(), "credentials.json"
-    )
+
+    credentials_dir = None
+    if 'GAPIS_CREDENTIALS_DIR' in os.environ:
+        credentials_dir = os.environ['GAPIS_CREDENTIALS_DIR']
+    else:
+        credentials_dir = pathlib.Path(__file__).parent.resolve()
+
+    token_path = os.path.join(credentials_dir, "token.json")
+    credentials_path = os.path.join(credentials_dir, "credentials.json")
+
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
