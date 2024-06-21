@@ -257,6 +257,7 @@ class client(object):
         src_gdrive: str,
         dest_s3: str,
         max_part_size: str = None,
+        overwrite: bool = False,
         num_tries: int = 3,
         delay_between_tries: float = 1.0,
     ):
@@ -267,6 +268,7 @@ class client(object):
             src_gdrive (str): URL of the Google Drive folder or file. It must be shared as 'Anyone with the link'.
             dest_s3 (str): desired path in TCP S3 bucket
             max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb")
+            overwrite (bool): optional. If the destination already exists, abort. (false by default).
 
         Exceptions:
             tcp.exceptions.UploadError
@@ -301,6 +303,7 @@ class client(object):
                 file,
                 os.path.join(dest_s3, filename),
                 max_part_size,
+                overwrite,
                 num_tries,
                 delay_between_tries,
             )
@@ -312,6 +315,7 @@ class client(object):
         src_local: str,
         dest_s3: str,
         max_part_size: str = None,
+        overwrite: bool = False,
         num_tries: int = 3,
         delay_between_tries: float = 1.0,
         verbose: bool = False,
@@ -325,6 +329,7 @@ class client(object):
             src_local (str): path to your file on your local computer
             dest_s3 (str): desired path in TCP S3 bucket
             max_part_size (str): optional. Size of each part to be sent. Either an int (number of bytes) or a human formatted string (example: "1Gb")
+            overwrite (bool): optional. If the destination already exists, abort. (false by default).
 
         Exceptions:
             tcp.exceptions.UploadError
@@ -364,8 +369,25 @@ class client(object):
                             ),
                         ).replace("\\", "/"),
                         max_part_size,
+                        overwrite,
+                        num_tries,
+                        delay_between_tries,
+                        verbose,
+                        compute_md5sum,
+                        md5sum_chunk_size,
                     )
             return
+
+
+        def check_if_exists ():
+            try:
+                resp = self.query().data.exists.post({'uri': dest_s3})
+            except exceptions.HttpClientError as err:
+                return False
+            return True
+
+        if not overwrite and check_if_exists():
+            raise exceptions.UploadError(f"{dest_s3} already exists. Please set overwrite to True.")
 
         if verbose:
             stderr.write(
@@ -377,6 +399,8 @@ class client(object):
 
         if max_part_size:
             presigned_body.update({"part_size": max_part_size})
+
+        print (presigned_body)
 
         try:
             resp = self.query().data.upload.multipart.post(presigned_body)
