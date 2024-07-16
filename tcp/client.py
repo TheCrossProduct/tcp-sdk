@@ -504,6 +504,7 @@ class client(object):
         delay_between_tries: float = 1.0,
         verbose: bool = False,
         md5sum_chunk_size=8192,
+        ignore_md5: bool = True
     ):
         """
         Download of a file from local repository to S3 repository.
@@ -562,7 +563,7 @@ class client(object):
                 if try_num == (num_tires-1):
                     raise exceptions.DownloadError(str(err), err.__dict__)
 
-        if "md5sum" in resp:
+        if not ignore_md5 and "md5sum" in resp:
             hash_md5 = hashlib.md5()
             with open(dest_local, "rb") as f:
                 for chunk in iter(lambda: f.read(md5sum_chunk_size), b""):
