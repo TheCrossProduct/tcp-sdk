@@ -556,10 +556,11 @@ class client(object):
                     with open(dest_local, "wb") as f:
                         for chunk in r.iter_content(chunk_size=chunk_size):
                             f.write(chunk)
-                return
+                break
 
             except requests.exceptions.HTTPError as err:
-                raise exceptions.DownloadError(str(err), err.__dict__)
+                if try_num == (num_tires-1):
+                    raise exceptions.DownloadError(str(err), err.__dict__)
 
         if "md5sum" in resp:
             hash_md5 = hashlib.md5()
@@ -569,4 +570,4 @@ class client(object):
             if hash_md5.hexdigest() != resp["md5sum"]:
                 raise exceptions.DownloadError("md5sums do not match")
 
-        raise exceptions.DownloadError(str(err), err.__dict__)
+        return
