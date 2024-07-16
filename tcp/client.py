@@ -560,7 +560,7 @@ class client(object):
                 break
 
             except requests.exceptions.HTTPError as err:
-                if try_num == (num_tires-1):
+                if try_num == (num_tries-1):
                     raise exceptions.DownloadError(str(err), err.__dict__)
 
         if not ignore_md5 and "md5sum" in resp:
