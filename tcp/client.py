@@ -559,7 +559,8 @@ class client(object):
                             f.write(chunk)
                 break
 
-            except requests.exceptions.HTTPError as err:
+            except (requests.exceptions.ChunkedEncodingError, 
+                    requests.exceptions.HTTPError) as err:
                 if try_num == (num_tries-1):
                     raise exceptions.DownloadError(str(err), err.__dict__)
 
