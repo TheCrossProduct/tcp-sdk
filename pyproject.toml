@@ -2,7 +2,16 @@
 name = "tcp-sdk"
 version = "1.0.28"
 description = "Python SDK to query The Cross Product API."
-authors = ["Théodore Chabardès <theodore.chabardes@thecrossproduct.com>"]
+authors = [
+           "Eric Bazan <eric.bazan@thecrossproduct.com>",
+           "Kourosh Beroukhim <kourosh.beroukhim@thecrossproduct.com>",
+           "Theodore Chabardes <theodore.chabardes@thecrossproduct.com>",
+           "David Duque <david.duque@thecrossproduct.com>",
+           "Leonardo Gigli <leonardo.gigli@thecrossproduct.com>",
+           "Benjamin Grappe <benjamin.grappe@thecrossproduct.com>",
+           "Andres Serna <andres.serna@thecrossproduct.com>",
+           "Elise Vi Nhu Ba <elise.vinhuba@thecrossproduct.com>"
+  ]
 license = "Proprietary License"
 readme = "README.md"
 packages = [{include = "tcp"}]
