@@ -532,6 +532,7 @@ class client(object):
         import time
         import sys
         import hashlib
+        import urllib3
 
         body = {}
         body["uri"] = src_s3
@@ -559,8 +560,9 @@ class client(object):
                             f.write(chunk)
                 break
 
-            except (requests.exceptions.ChunkedEncodingError, 
-                    requests.exceptions.HTTPError) as err:
+            except (requests.exceptions.ChunkedEncodingError,
+                    requests.exceptions.HTTPError,
+                    urllib3.exceptions.ProtocolError) as err:
                 if try_num == (num_tries-1):
                     raise exceptions.DownloadError(str(err), err.__dict__)
 
