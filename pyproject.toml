@@ -22,7 +22,7 @@ requests = "^2.31.0"
 slumber = "^0.7.1"
 requests-oauthlib = "^2.0.0"
 ipython = { version = "^8.24.0", optional = true }
-pyzmq = "25.1.2"
+pyzmq = "^25.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
