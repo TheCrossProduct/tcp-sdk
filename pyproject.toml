@@ -1,42 +1,41 @@
-[tool.poetry]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
 name = "tcp-sdk"
 version = "1.0.28"
 description = "Python SDK to query The Cross Product API."
-authors = [
-           "Eric Bazan <eric.bazan@thecrossproduct.com>",
-           "Kourosh Beroukhim <kourosh.beroukhim@thecrossproduct.com>",
-           "Theodore Chabardes <theodore.chabardes@thecrossproduct.com>",
-           "David Duque <david.duque@thecrossproduct.com>",
-           "Leonardo Gigli <leonardo.gigli@thecrossproduct.com>",
-           "Benjamin Grappe <benjamin.grappe@thecrossproduct.com>",
-           "Andres Serna <andres.serna@thecrossproduct.com>",
-           "Elise Vi Nhu Ba <elise.vinhuba@thecrossproduct.com>"
-  ]
-license = "Proprietary License"
 readme = "README.md"
-packages = [{include = "tcp"}]
+requires-python = ">=3.11"
+authors = [
+    {name="Eric Bazan", email="eric.bazan@thecrossproduct.com"},
+    {name="Kourosh Beroukhim", email="kourosh.beroukhim@thecrossproduct.com"},
+    {name="Theodore Chabardes", email="theodore.chabardes@thecrossproduct.com"},
+    {name="David Duque", email="david.duque@thecrossproduct.com"},
+    {name="Leonardo Gigli", email="leonardo.gigli@thecrossproduct.com"},
+    {name="Benjamin Grappe", email="benjamin.grappe@thecrossproduct.com"},
+    {name="Andres Serna", email="andres.serna@thecrossproduct.com"},
+    {name="Elise Vi Nhu Ba", email="elise.vinhuba@thecrossproduct.com"}
+]
+dependencies = [
+    "requests-oauthlib>=2.0.0",
+    "requests>=2.32.3",
+    "slumber>=0.7.1",
+    "python-socketio>=5.11.4",
+    "websocket-client>=1.8.0",
+    "ipython>=8.29.0"
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-requests = "^2.31.0"
-slumber = "^0.7.1"
-requests-oauthlib = "^2.0.0"
-ipython = { version = "^8.24.0", optional = true }
-pyzmq = "^25.1.2"
+[dependency-groups]
+dev = [
+    "ipython>=8.29.0"
+]
+test = [
+    "google-api-python-client>=2.153.0",
+    "google-auth-oauthlib>=1.2.1",
+    "pytest>=8.3.3"
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.1.1"
-google-api-python-client = "^2.125.0"
-google-auth-oauthlib = "^1.2.0"
-python-socketio = "^5.11.2"
-websocket-client = "^1.8.0"
-
-[tool.poetry.group.build.dependencies]
-build = "^1.2.1"
-
-[tool.poetry.extras]
-ipython = ["ipython"]
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.hatch.build.targets.wheel]
+packages = ["tcp"]
