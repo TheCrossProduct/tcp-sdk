@@ -24,7 +24,7 @@ dependencies = [
     "slumber>=0.7.1",
     "python-socketio>=5.11.4",
     "websocket-client>=1.8.0",
-    "ipython>=8.29.0"
+    "ipython>=8.29.0",
 ]
 
 [dependency-groups]
