@@ -17,3 +17,4 @@ __pycache__
 *.egg-info/
 tests/credentials.json
 tests/token.json
+.python-version
