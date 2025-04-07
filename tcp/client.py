@@ -358,16 +358,29 @@ class client(object):
 
             for root, dirs, files in os.walk(src_local):
                 for file in files:
-                    self.upload(
-                        os.path.normpath(os.path.join(root, file)),
-                        os.path.join(
+
+                    new_dest_s3 = os.path.join(
+                            root_in_s3,
+                            os.path.normpath(
+                                os.path.join(
+                                    os.path.normpath(root[len(src_local) :]), file
+                                )
+                            ),
+                        ).replace("\\", "/")
+
+                    if dest_s3:
+                       new_dest_s3 = os.path.join(
                             os.path.join(os.path.normpath(dest_s3), root_in_s3),
                             os.path.normpath(
                                 os.path.join(
                                     os.path.normpath(root[len(src_local) :]), file
                                 )
                             ),
-                        ).replace("\\", "/"),
+                        ).replace("\\", "/")
+
+                    self.upload(
+                        os.path.normpath(os.path.join(root, file)),
+                        new_dest_s3,
                         max_part_size,
                         overwrite,
                         num_tries,
@@ -399,8 +412,6 @@ class client(object):
 
         if max_part_size:
             presigned_body.update({"part_size": max_part_size})
-
-        print (presigned_body)
 
         try:
             resp = self.query().data.upload.multipart.post(presigned_body)
