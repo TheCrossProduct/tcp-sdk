@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tcp-sdk"
-version = "1.0.28"
+version = "1.0.29"
 description = "Python SDK to query The Cross Product API."
 readme = "README.md"
 requires-python = ">=3.11"

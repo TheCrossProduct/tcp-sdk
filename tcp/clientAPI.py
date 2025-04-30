@@ -57,7 +57,7 @@ class clientResource(slumber.Resource):
                     ) from err
                 raise exceptions.HttpClientError(str(err), **err.__dict__) from err
             except slumber.exceptions.HttpServerError as err:
-                if err.response.status_code not in (502, 503, 504):
+                if err.response.status_code < 500:
                     raise exceptions.HttpServerError(str(err), **err.__dict__) from err
 
             retry += 1
