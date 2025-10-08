@@ -25,6 +25,7 @@ dependencies = [
     "python-socketio>=5.11.4",
     "websocket-client>=1.8.0",
     "ipython>=8.29.0",
+    "click>=8.1.7",
 ]
 
 [dependency-groups]
