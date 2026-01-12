@@ -12,12 +12,19 @@ def getlist(client, prefix=None, suffix=None, **kwargs):
     for k, v in body.items():
         logging.info(f"  - {k}: {v}")
     try:
-        res = client.query().data.post(body)
+        res = client.query().data.post(body, **kwargs)
+        while "next" in res["paging"]:
+            logging.info("getting next page...")
+            lnk = res["paging"]["next"].split("/next/")[1]
+            tmp = client.query().data.next(lnk).get()
+            tmp['dirs'] += res['dirs']
+            tmp['files'] += res['files']
+            res = tmp
         print(yaml.dump(res))
     except tcp.exceptions.HttpClientError as err:
         logging.error(err.content)
         return False
-    return True
+    return res
 
 def delete(client, uri):
     try:
@@ -81,15 +88,10 @@ def download(client, src, dst=None):
         return False
     return True
 
-def downloadSelection(client, dst="./", prefix=None, suffix=None):
+def downloadSelection(client, dst="./", **kwargs):
     logging.info(f"downloading selection")
-    body={}
-    if prefix: body["prefix"] = prefix
-    if suffix: body["suffix"] = suffix
-    for k, v in body.items():
-        logging.info(f"  - {k}: {v}")
     try:
-        res = client.query().data.post(body)
+        res = getlist(client, **kwargs)
         for uri in res["dirs"]:
             loc = Path(dst)/uri
             logging.info(f"create {loc}")
@@ -125,6 +127,7 @@ def _download(client, **kwargs):
 @click.option("-s", "--suffix", type=str, default="")
 @click.option("--personal/--global", default=True)
 @click.option("-g", "--group", "groups", type=str, multiple=True)
+@click.option("-i", "--items-per-page", type=int, default=100)
 @pass_client
 def _list(client, **kwargs):
     getlist(client, **kwargs)
@@ -143,8 +146,10 @@ def _delete_selection(client, **kwargs):
     deleteSelection(client, **kwargs)
 
 @data.command(name="download-selection", help="download files by pre/suffix")
-@click.option("-s", "--prefix", type=str, default="")
-@click.option("-p", "--suffix", type=str, default="")
+@click.option("-p", "--prefix", type=str, default="")
+@click.option("-s", "--suffix", type=str, default="")
 @click.option("-d", "--dst", type=click.Path(), default="./")
-def _download_selection(**kwargs):
+@click.option("-g", "--group", "groups", type=str, multiple=True)
+@pass_client
+def _download_selection(client, **kwargs):
     downloadSelection(client, **kwargs)
