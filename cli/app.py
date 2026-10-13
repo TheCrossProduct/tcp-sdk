@@ -4,10 +4,10 @@ from .utils import collect as collect_process
 
 def URI(uri):
 
-    if ":" not in uri:
+    if "#" not in uri:
         logging.info(f"passing external uri {uri}")
         return uri
-    src, dst = uri.split(":")
+    src, dst = uri.split("#")
     if not dst:
         t = time.time()
         timestamp  = time.strftime("%Y-%m-%d_%Hh%Mm%Ss", time.gmtime(t))
@@ -85,7 +85,11 @@ def buildAppCommand(domain_group, domain_name, app_name, app_spec):
         logging.debug(f"Launching {domain_name}.{app_name} with inputs:")
         for k,v in inputs.items(): logging.debug(f"  - {k}: {v}")
         body = {"inputs":inputs}
-        if pool: body["pool"] = pool
+        if pool:
+            #pool = list(pool)
+            print("exact pool = ", pool)
+            body["pool"] = pool
+            body["exact_match"] = "True"
         if tags: body["tags"] = tags
         api = client.query().app
         api = api.__getattr__(domain_name)
